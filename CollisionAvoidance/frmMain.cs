@@ -14,7 +14,7 @@ using System.IO.Pipes;
 using System.IO;
 using System.Threading;
 
-namespace GrabFrame
+namespace CollisionAvoidance
 {
     public partial class frmMain : Form
     {
@@ -183,6 +183,16 @@ namespace GrabFrame
             }
         }
 
+        private void settingsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            SettingsForm setForm = new SettingsForm();
+            setForm.Visible = true;
+        }
+
+        private void exitToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Application.Exit();
+        }
     }
 
     static class ExtMethods
