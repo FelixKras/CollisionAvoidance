@@ -50,7 +50,7 @@ namespace CollisionAvoidance
                             instance.ScoreThresh = 0.5;
                             instance.CamFOV = 20;
                             instance.DZoneVert = 10;
-                            instance.DZoneVert = 10;
+                            instance.DZoneHor = 10;
                             instance.ShowBoxes = true;
                             instance.ShowDZ = true;
                         }
@@ -116,9 +116,9 @@ namespace CollisionAvoidance
         public double DZoneHor { get; set; }
 
         [Category("3. Detection module")]
-        [DisplayName("Danger zone horizontal")]
+        [DisplayName("Danger zone vertical")]
         [ReadOnly(false)]
-        [Description("Verticle angle from buttom to treat as a danger [percent of FOV]")]
+        [Description("Vertical angle from buttom to treat as a danger [percent of FOV]")]
         public double DZoneVert { get; set; }
 
         [Category("4. UI options")]

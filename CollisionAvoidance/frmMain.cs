@@ -13,6 +13,8 @@ using Emgu.CV.Structure;
 using System.IO.Pipes;
 using System.IO;
 using System.Threading;
+using System.Net.Sockets;
+using System.Net;
 
 namespace CollisionAvoidance
 {
@@ -25,10 +27,54 @@ namespace CollisionAvoidance
         Thread thrPipeConnection;
         NamedPipeServerStream server;
 
+        delegate void CollEventDelegate(CollisionEventArgs _args);
+        event CollEventDelegate CollisionWarningEvent;
+        EventHandler AlertEvent;
+
+        internal class Detection
+        {
+            internal float Score;
+            internal int Class;
+            internal RectangleF BBox;
+            internal double Azimuth;
+
+            public Point GetCenter
+            {
+                get
+                {
+                    return BBox.Center();
+                }
+
+            }
+
+            public Detection(float v, int c, RectangleF rectangleF, double az)
+            {
+                this.Score = v;
+                this.Class = c;
+                this.BBox = rectangleF;
+                this.Azimuth = az;
+            }
+        }
+
+        internal class CollisionEventArgs : EventArgs
+        {
+            internal Detection colDetect;
+            public CollisionEventArgs()
+            {
+
+            }
+            public CollisionEventArgs(Detection det)
+            {
+                this.colDetect = det;
+            }
+        }
+
         public frmMain()
         {
             InitializeComponent();
             cancelEvent = new CancellationTokenSource();
+            CollisionWarningEvent += CollisionHandler;
+            AlertEvent += OnReceivedMessage;
         }
 
         private void imageGrabbedEvent(object sender, EventArgs e)
@@ -48,13 +94,42 @@ namespace CollisionAvoidance
 
             }
         }
+        private void CollisionHandler(CollisionEventArgs e)
+        {
+            AlertEvent.Raise(string.Format("Collision detected. AZ: {0:F3}",e.colDetect.Azimuth));
+            SendUdpMessage(e.colDetect);
+        }
 
+        private void SendUdpMessage(Detection colDetect)
+        {
+            UdpClient udpc = new UdpClient();
+            IPEndPoint remoteIPE = new IPEndPoint(IPAddress.Parse(SettingsHolder.Instance.IPAddress), SettingsHolder.Instance.IPPort);
+            string msg = string.Format("#WARNING#TARGET#RNG#AZ#{0:F3}#{1:F3}", SettingsHolder.Instance.VDistance, colDetect.Azimuth);
+            udpc.Send(msg.GetBytes(), msg.Length, remoteIPE);
+            AlertEvent.Raise("Warning Sent");
+        }
+
+        private void OnReceivedMessage(object sender, EventArgs e)
+        {
+            string msg = sender as string;
+            if (msg != null)
+            {
+                string sMsgToDisplay = DateTime.UtcNow.ToString("HH:mm:ss.fff") + ": " + msg;
+                listBox1.InvokeIfRequired(
+                    () =>
+                    {
+                        listBox1.Items.Insert(0, sMsgToDisplay);
+                    });
+                //lstMessages.Insert(0, sMsgToDisplay);
+            }
+        }
         void run_server()
         {
             // Open the named pipe.
             if (server == null)
             {
                 server = new NamedPipeServerStream("DetectionData", PipeDirection.InOut, 2);
+                AlertEvent.Raise(string.Format("Started module connection"));
             }
             else
             {
@@ -67,11 +142,6 @@ namespace CollisionAvoidance
             {
 
             }
-
-
-
-
-
 
 
             var br = new BinaryReader(server);
@@ -87,8 +157,8 @@ namespace CollisionAvoidance
                     var len3 = (int)br.ReadUInt32();
                     var len4 = (int)br.ReadUInt32();
                     byte[] imgBytes = br.ReadBytes(len1 * len2 * len3);
-                    byte[] scoresBytes = br.ReadBytes(len4 * sizeof(float)); 
-                    byte[] classBytes= br.ReadBytes(len4);
+                    byte[] scoresBytes = br.ReadBytes(len4 * sizeof(float));
+                    byte[] classBytes = br.ReadBytes(len4);
                     byte[] Out_yminBytes = br.ReadBytes(len4 * sizeof(float));
                     byte[] Out_xminBytes = br.ReadBytes(len4 * sizeof(float));
                     byte[] Out_ymaxBytes = br.ReadBytes(len4 * sizeof(float));
@@ -97,10 +167,10 @@ namespace CollisionAvoidance
                     byte[,,] imgBytes3d = new byte[len1, len2, len3];
                     Buffer.BlockCopy(imgBytes, 0, imgBytes3d, 0, imgBytes.Length);
                     Image<Bgr, byte> img = new Image<Bgr, byte>(imgBytes3d);
-                    pictureBox1.Image = img.ToBitmap();
+
                     Console.WriteLine("Read: \"{0}\" bytes", imgBytes.Length);
 
-                   
+                    int[] Classes = new int[len4];
                     float[] Scores = new float[len4];
                     float[] ymin = new float[len4];
                     float[] xmin = new float[len4];
@@ -108,11 +178,27 @@ namespace CollisionAvoidance
                     float[] xmax = new float[len4];
 
                     Buffer.BlockCopy(imgBytes, 0, imgBytes3d, 0, imgBytes.Length);
+                    Buffer.BlockCopy(classBytes, 0, Classes, 0, classBytes.Length);
                     Buffer.BlockCopy(scoresBytes, 0, Scores, 0, scoresBytes.Length);
                     Buffer.BlockCopy(Out_yminBytes, 0, ymin, 0, scoresBytes.Length);
                     Buffer.BlockCopy(Out_xminBytes, 0, xmin, 0, scoresBytes.Length);
                     Buffer.BlockCopy(Out_ymaxBytes, 0, ymax, 0, scoresBytes.Length);
                     Buffer.BlockCopy(Out_xmaxBytes, 0, xmax, 0, scoresBytes.Length);
+
+
+                    List<Detection> lstDetect = new List<Detection>();
+                    FillList(lstDetect, Scores, Classes, ymin, xmin, ymax, xmax, img.Size);
+                    AlertEvent.Raise(string.Format("Received {0:D} targets above thresh ({1:F1})",lstDetect.Count,SettingsHolder.Instance.ScoreThresh));
+                    if (SettingsHolder.Instance.ShowBoxes)
+                    {
+                        DrawDetectionBoxes(ref img, lstDetect);
+                    }
+
+
+                    CheckIfInDangerZone(ref img, lstDetect);
+
+                    pictureBox1.Image = img.ToBitmap();
+
                     //var buf = Encoding.ASCII.GetBytes("received");     // Get ASCII byte array     
                     //bw.Write((uint)buf.Length);                // Write string length
                     //bw.Write(buf);                              // Write string
@@ -124,7 +210,7 @@ namespace CollisionAvoidance
                 server.Close();
                 server.Dispose();
                 cancelEvent = new CancellationTokenSource();
-                                    // When client disconnects
+                // When client disconnects
             }
             catch (ThreadAbortException)
             {
@@ -139,7 +225,6 @@ namespace CollisionAvoidance
                 cancelEvent = new CancellationTokenSource();
             }
 
-            
 
             Console.WriteLine("Client disconnected.");
             server.Close();
@@ -147,9 +232,55 @@ namespace CollisionAvoidance
             cancelEvent = new CancellationTokenSource();
         }
 
+        private void CheckIfInDangerZone(ref Image<Bgr, byte> img, List<Detection> lstDetect)
+        {
+            Rectangle DZrect = Rectangle.Empty;
+            double Left = img.Size.Width / 2 - (SettingsHolder.Instance.DZoneHor / 100 * img.Size.Width);
+            double Right = img.Size.Width / 2 + (SettingsHolder.Instance.DZoneHor / 100 * img.Size.Width);
+            double Top = img.Size.Height - (SettingsHolder.Instance.DZoneVert / 100 * img.Size.Height);
+            double Bottom = 0;
+            DZrect = new Rectangle((int)Left, (int)Top, (int)(Right - Left), (int)(Top - Bottom));
+            if (SettingsHolder.Instance.ShowDZ)
+            {
+                Emgu.CV.CvInvoke.Rectangle(img, DZrect, new MCvScalar(0, 0, 255));
+            }
+            for (int i = 0; i < lstDetect.Count; i++)
+            {
+                if (DZrect.Contains(lstDetect[i].GetCenter))
+                {
+                    CollisionWarningEvent(new CollisionEventArgs(lstDetect[i]));
+                }
+            }
+
+
+
+        }
+
+        private void DrawDetectionBoxes(ref Image<Bgr, byte> img, List<Detection> lstDetect)
+        {
+            for (int i = 0; i < lstDetect.Count; i++)
+            {
+                Emgu.CV.CvInvoke.Rectangle(img, lstDetect[i].BBox.ToRect(), new MCvScalar(0, 255, 0));
+            }
+        }
+
+        private void FillList(List<Detection> lstDetect, float[] scores, int[] classes, float[] ymin, float[] xmin, float[] ymax, float[] xmax, Size imgsize)
+        {
+            for (int i = 0; i < scores.Length; i++)
+            {
+
+                if (scores[i] > SettingsHolder.Instance.ScoreThresh)
+                {
+                    RectangleF rect = new RectangleF(xmin[i] * imgsize.Width, ymin[i] * imgsize.Height, (ymax[i] - ymin[i]) * imgsize.Height, (xmax[i] - xmin[i]) * imgsize.Width);
+                    double az = (imgsize.Width - rect.Center().X) * SettingsHolder.Instance.CamFOV / imgsize.Width;
+                    lstDetect.Add(new Detection(scores[i], classes[i], rect, az));
+                }
+            }
+
+        }
+
         private void button1_Click(object sender, EventArgs e)
         {
-
 
             if (thrPipe == null)
             {
@@ -210,8 +341,49 @@ namespace CollisionAvoidance
             }
 
 
+        }
 
+        public static Rectangle ToRect(this RectangleF rectf)
+        {
+            return new Rectangle((int)rectf.X, (int)rectf.Y, (int)rectf.Width, (int)rectf.Height);
+        }
+        public static Point Center(this RectangleF rectf)
+        {
+            return new Point((int)(rectf.X + (rectf.Width / 2)), (int)(rectf.Y + rectf.Height / 2));
+        }
+        public static Point Center(this Rectangle rectf)
+        {
+            return new Point((int)(rectf.X + (rectf.Width / 2)), (int)(rectf.Y + rectf.Height / 2));
+        }
 
+        public static byte[] GetBytes(this string str)
+        {
+            return ASCIIEncoding.ASCII.GetBytes(str);
+        }
+        public static void Raise(this EventHandler handler, object sender, EventArgs args = null)
+        {
+            EventHandler localHandlerCopy = handler;
+            if (args == null)
+            {
+                args = EventArgs.Empty;
+            }
+            if (localHandlerCopy != null)
+            {
+                localHandlerCopy(sender, args);
+            }
+        }
+
+        public static void InvokeIfRequired(this ISynchronizeInvoke obj, MethodInvoker action)
+        {
+            if (obj.InvokeRequired)
+            {
+                object[] args = new object[0];
+                obj.Invoke(action, args);
+            }
+            else
+            {
+                action();
+            }
         }
     }
 }
