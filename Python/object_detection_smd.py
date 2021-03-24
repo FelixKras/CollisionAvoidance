@@ -15,8 +15,8 @@ from utils import label_map_util
 from utils import visualization_utils as vis_util
 
 
-#trained models root
-root = '..\\smd\\Singapore-Maritime-Dataset-Trained-Deep-Learning-Models-master\\trained_models'
+# trained models root
+root = 'C:\\projects\\detection\\smd\\Singapore-Maritime-Dataset-Trained-Deep-Learning-Models-master\\trained_models'
 
 # # Model preparation
 MODEL_NAME = 'faster_rcnn_inception_v2_smd_2019_01_29'
@@ -73,9 +73,6 @@ f = open(r'\\.\pipe\DetectionData', 'r+b', 0)
 # Input options
 #     IP Camera
 inputpath = "rtsp://192.168.10.14/bs1"
-#     Ships Video
-# Note:the next line should be uncommented if input path is from video file
-# inputpath = "C:/projects/python/Singapore-Maritime-Dataset-Trained-Deep-Learning-Models-master/trained_models/faster_rcnn_inception_v2_smd_2019_01_29/test_vid/v6 a p.avi"
 
 
 with detection_graph.as_default():
@@ -93,19 +90,11 @@ with detection_graph.as_default():
                 if tensor_name in all_tensor_names:
                     tensor_dict[key] = tf.compat.v1.get_default_graph().get_tensor_by_name(tensor_name)
 
-            # Note: the line should be uncommented if input path is from video file
-            # vid = cv2.VideoCapture(inputpath)
-
-            i = 1
             while True:
-                i += 1
-
-                # Note:the next line should be commented if input path is from video file
                 vid = cv2.VideoCapture(inputpath)
 
                 (grabbed, frame) = vid.read()
 
-                # Note:the next two lines should be commented if input path is from video file
                 vid.release()
                 time.sleep(3)
 
@@ -113,17 +102,6 @@ with detection_graph.as_default():
 
                     # Actual detection.
                     output_dict = run_inference_for_single_image(frame, detection_graph)
-
-                    ## Visualization of the results of a detection.
-                    # vis_util.visualize_boxes_and_labels_on_image_array(
-                    #          frame,
-                    #          output_dict['detection_boxes'],
-                    #          output_dict['detection_classes'],
-                    #          output_dict['detection_scores'],
-                    #          category_index,
-                    #          instance_masks=output_dict.get('detection_masks'),
-                    #          use_normalized_coordinates=True,
-                    #          line_thickness=4)
 
                     out_scores = np.array([s for s in output_dict['detection_scores']])
                     out_scores = np.pad(out_scores, (0,MAX_DETECT_NUM-len(out_scores)))
