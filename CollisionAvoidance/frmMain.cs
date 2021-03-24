@@ -15,6 +15,7 @@ using System.IO;
 using System.Threading;
 using System.Net.Sockets;
 using System.Net;
+using System.Diagnostics;
 
 namespace CollisionAvoidance
 {
@@ -26,6 +27,7 @@ namespace CollisionAvoidance
         Thread thrPipe;
         Thread thrPipeConnection;
         NamedPipeServerStream server;
+        bool bHasPythonStarted;
 
         delegate void CollEventDelegate(CollisionEventArgs _args);
         event CollEventDelegate CollisionWarningEvent;
@@ -75,6 +77,7 @@ namespace CollisionAvoidance
             cancelEvent = new CancellationTokenSource();
             CollisionWarningEvent += CollisionHandler;
             AlertEvent += OnReceivedMessage;
+            bHasPythonStarted = false;
         }
 
         private void imageGrabbedEvent(object sender, EventArgs e)
@@ -96,7 +99,7 @@ namespace CollisionAvoidance
         }
         private void CollisionHandler(CollisionEventArgs e)
         {
-            AlertEvent.Raise(string.Format("Collision detected. AZ: {0:F3}",e.colDetect.Azimuth));
+            AlertEvent.Raise(string.Format("Collision detected. AZ: {0:F3}", e.colDetect.Azimuth));
             SendUdpMessage(e.colDetect);
         }
 
@@ -119,34 +122,27 @@ namespace CollisionAvoidance
                     () =>
                     {
                         listBox1.Items.Insert(0, sMsgToDisplay);
+                        if (listBox1.Items.Count > 150)
+                        {
+                            listBox1.Items.TrimTo(100);
+                        }
+
                     });
                 //lstMessages.Insert(0, sMsgToDisplay);
             }
         }
         void run_server()
         {
-            // Open the named pipe.
-            if (server == null)
+
+            if(!bHasPythonStarted)
             {
-                server = new NamedPipeServerStream("DetectionData", PipeDirection.InOut, 2);
-                AlertEvent.Raise(string.Format("Started module connection"));
+                Thread thrPyhtonProcess = new Thread(() => { CLI.RunProcess(ref bHasPythonStarted); });
+                thrPyhtonProcess.IsBackground = true;
+                thrPyhtonProcess.Start();
+                
+                
             }
-            else
-            {
-                server.Close();
-
-            }
-            thrPipeConnection = new Thread(() => { server.WaitForConnection(); });
-            thrPipeConnection.Start();
-            while ((thrPipeConnection.ThreadState & ThreadState.Stopped) == 0 || cancelEvent.IsCancellationRequested)
-            {
-
-            }
-
-
-            var br = new BinaryReader(server);
-            var bw = new BinaryWriter(server);
-
+            BinaryReader br = InitPipe();
 
             try
             {
@@ -188,7 +184,7 @@ namespace CollisionAvoidance
 
                     List<Detection> lstDetect = new List<Detection>();
                     FillList(lstDetect, Scores, Classes, ymin, xmin, ymax, xmax, img.Size);
-                    AlertEvent.Raise(string.Format("Received {0:D} targets above thresh ({1:F1})",lstDetect.Count,SettingsHolder.Instance.ScoreThresh));
+                    AlertEvent.Raise(string.Format("Received {0:D} targets above thresh ({1:F1})", lstDetect.Count, SettingsHolder.Instance.ScoreThresh));
                     if (SettingsHolder.Instance.ShowBoxes)
                     {
                         DrawDetectionBoxes(ref img, lstDetect);
@@ -232,14 +228,40 @@ namespace CollisionAvoidance
             cancelEvent = new CancellationTokenSource();
         }
 
+        private BinaryReader InitPipe()
+        {
+            // Open the named pipe.
+            if (server == null)
+            {
+                server = new NamedPipeServerStream("DetectionData", PipeDirection.InOut, 2);
+                AlertEvent.Raise(string.Format("Started module connection"));
+            }
+            else
+            {
+                server.Close();
+
+            }
+            thrPipeConnection = new Thread(() => { server.WaitForConnection(); });
+            thrPipeConnection.Start();
+            while ((thrPipeConnection.ThreadState & System.Threading.ThreadState.Stopped) == 0 || cancelEvent.IsCancellationRequested)
+            {
+
+            }
+
+
+            var br = new BinaryReader(server);
+            var bw = new BinaryWriter(server);
+            return br;
+        }
+
         private void CheckIfInDangerZone(ref Image<Bgr, byte> img, List<Detection> lstDetect)
         {
             Rectangle DZrect = Rectangle.Empty;
             double Left = img.Size.Width / 2 - (SettingsHolder.Instance.DZoneHor / 100 * img.Size.Width);
             double Right = img.Size.Width / 2 + (SettingsHolder.Instance.DZoneHor / 100 * img.Size.Width);
             double Top = img.Size.Height - (SettingsHolder.Instance.DZoneVert / 100 * img.Size.Height);
-            double Bottom = 0;
-            DZrect = new Rectangle((int)Left, (int)Top, (int)(Right - Left), (int)(Top - Bottom));
+            double Bottom = img.Size.Height;
+            DZrect = new Rectangle((int)Left, (int)Top, (int)(Right - Left), (int)(Bottom - Top));
             if (SettingsHolder.Instance.ShowDZ)
             {
                 Emgu.CV.CvInvoke.Rectangle(img, DZrect, new MCvScalar(0, 0, 255));
@@ -272,7 +294,7 @@ namespace CollisionAvoidance
                 if (scores[i] > SettingsHolder.Instance.ScoreThresh)
                 {
                     RectangleF rect = new RectangleF(xmin[i] * imgsize.Width, ymin[i] * imgsize.Height, (ymax[i] - ymin[i]) * imgsize.Height, (xmax[i] - xmin[i]) * imgsize.Width);
-                    double az = (imgsize.Width - rect.Center().X) * SettingsHolder.Instance.CamFOV / imgsize.Width;
+                    double az = (imgsize.Width / 2 - rect.Center().X) * SettingsHolder.Instance.CamFOV / imgsize.Width;
                     lstDetect.Add(new Detection(scores[i], classes[i], rect, az));
                 }
             }
@@ -291,7 +313,7 @@ namespace CollisionAvoidance
             else
             {
                 cancelEvent.Cancel();
-                while ((thrPipe.ThreadState & (ThreadState.Stopped | ThreadState.Unstarted | ThreadState.WaitSleepJoin | ThreadState.AbortRequested)) == 0)
+                while ((thrPipe.ThreadState & (System.Threading.ThreadState.Stopped | System.Threading.ThreadState.Unstarted | System.Threading.ThreadState.WaitSleepJoin | System.Threading.ThreadState.AbortRequested)) == 0)
                 {
 
                     thrPipe.Abort();
@@ -356,6 +378,16 @@ namespace CollisionAvoidance
             return new Point((int)(rectf.X + (rectf.Width / 2)), (int)(rectf.Y + rectf.Height / 2));
         }
 
+        public static ListBox.ObjectCollection TrimTo(this ListBox.ObjectCollection collection, int cnt)
+        {
+            int totalcnt = collection.Count;
+            for (int i = 0; i < totalcnt - cnt; i++)
+            {
+                collection.RemoveAt(totalcnt - i-1);
+            }
+            return collection;
+        }
+
         public static byte[] GetBytes(this string str)
         {
             return ASCIIEncoding.ASCII.GetBytes(str);
@@ -384,6 +416,42 @@ namespace CollisionAvoidance
             {
                 action();
             }
+        }
+    }
+
+    static class CLI
+    {
+        public static void RunProcess(ref bool IsStarted)
+        {
+            // Set working directory and create process
+            DirectoryInfo curDir = new FileInfo(Application.ExecutablePath).Directory;
+            ProcessStartInfo start = new ProcessStartInfo();
+            start.FileName = "cmd.exe";
+            start.Arguments = "/K "+curDir+"\\run_script.bat";
+            start.UseShellExecute = false;
+            start.RedirectStandardOutput = true;
+            start.RedirectStandardError = true;
+            start.WorkingDirectory = curDir.FullName;
+            string stdout, stderr;
+            using (Process process = Process.Start(start))
+            {
+                long AffinityMask = (long)process.ProcessorAffinity;
+                AffinityMask &= 0x0001; // use only any of the first 4 available processors
+                process.ProcessorAffinity = (IntPtr)AffinityMask;
+
+                using (StreamReader reader = process.StandardOutput)
+                {
+                    stdout = reader.ReadToEnd();
+                }
+
+                using (StreamReader reader = process.StandardError)
+                {
+                    stderr = reader.ReadToEnd();
+                }
+                IsStarted = true;
+                process.WaitForExit();
+            }
+           
         }
     }
 }

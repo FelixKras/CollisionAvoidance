@@ -7,10 +7,13 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Collision Avoidance", "Coll
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		All|Any CPU = All|Any CPU
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2B423BA6-D655-4ADB-9150-2E3788F5E9EC}.All|Any CPU.ActiveCfg = Release|Any CPU
+		{2B423BA6-D655-4ADB-9150-2E3788F5E9EC}.All|Any CPU.Build.0 = Release|Any CPU
 		{2B423BA6-D655-4ADB-9150-2E3788F5E9EC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{2B423BA6-D655-4ADB-9150-2E3788F5E9EC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2B423BA6-D655-4ADB-9150-2E3788F5E9EC}.Release|Any CPU.ActiveCfg = Release|Any CPU
