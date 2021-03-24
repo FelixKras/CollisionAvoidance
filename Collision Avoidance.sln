@@ -5,6 +5,10 @@ VisualStudioVersion = 15.0.28307.902
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Collision Avoidance", "CollisionAvoidance\Collision Avoidance.csproj", "{2B423BA6-D655-4ADB-9150-2E3788F5E9EC}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ArpaFromCamera", "ArpaFromCamera\ArpaFromCamera.csproj", "{D8D4ECA9-BBD9-4217-B205-62A0EC3733BA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ArpaTester", "ArpaTester\ArpaTester.csproj", "{79E06E1F-A1DE-40E3-BD09-92E70F6D2014}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		All|Any CPU = All|Any CPU
@@ -18,6 +22,18 @@ Global
 		{2B423BA6-D655-4ADB-9150-2E3788F5E9EC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2B423BA6-D655-4ADB-9150-2E3788F5E9EC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2B423BA6-D655-4ADB-9150-2E3788F5E9EC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D8D4ECA9-BBD9-4217-B205-62A0EC3733BA}.All|Any CPU.ActiveCfg = Release|Any CPU
+		{D8D4ECA9-BBD9-4217-B205-62A0EC3733BA}.All|Any CPU.Build.0 = Release|Any CPU
+		{D8D4ECA9-BBD9-4217-B205-62A0EC3733BA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D8D4ECA9-BBD9-4217-B205-62A0EC3733BA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D8D4ECA9-BBD9-4217-B205-62A0EC3733BA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D8D4ECA9-BBD9-4217-B205-62A0EC3733BA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{79E06E1F-A1DE-40E3-BD09-92E70F6D2014}.All|Any CPU.ActiveCfg = Release|Any CPU
+		{79E06E1F-A1DE-40E3-BD09-92E70F6D2014}.All|Any CPU.Build.0 = Release|Any CPU
+		{79E06E1F-A1DE-40E3-BD09-92E70F6D2014}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{79E06E1F-A1DE-40E3-BD09-92E70F6D2014}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{79E06E1F-A1DE-40E3-BD09-92E70F6D2014}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{79E06E1F-A1DE-40E3-BD09-92E70F6D2014}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

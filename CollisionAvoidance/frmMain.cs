@@ -110,6 +110,7 @@ namespace CollisionAvoidance
             UdpClient udpc = new UdpClient();
             IPEndPoint remoteIPE = new IPEndPoint(IPAddress.Parse(SettingsHolder.Instance.IPAddress), SettingsHolder.Instance.IPPort);
             string msg = string.Format("#WARNING#TARGET#RNG#AZ#{0:F3}#{1:F3}", SettingsHolder.Instance.VDistance, colDetect.Azimuth);
+            
             udpc.Send(msg.GetBytes(), msg.Length, remoteIPE);
             AlertEvent.Raise("Warning Sent");
         }
