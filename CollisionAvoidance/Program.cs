@@ -29,7 +29,7 @@ namespace CollisionAvoidance
 
         private static SettingsHolder instance;
         private static object syncroot = new Object();
-       
+        public static int PythonProcessId { get; set; }
 
         public static SettingsHolder Instance
         {

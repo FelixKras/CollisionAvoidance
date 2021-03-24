@@ -16,6 +16,7 @@ using System.Threading;
 using System.Net.Sockets;
 using System.Net;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 
 namespace CollisionAvoidance
 {
@@ -78,6 +79,7 @@ namespace CollisionAvoidance
             CollisionWarningEvent += CollisionHandler;
             AlertEvent += OnReceivedMessage;
             bHasPythonStarted = false;
+            SettingsHolder.PythonProcessId = -1;
         }
 
         private void imageGrabbedEvent(object sender, EventArgs e)
@@ -346,6 +348,26 @@ namespace CollisionAvoidance
         {
             Application.Exit();
         }
+
+        protected override void OnClosing(CancelEventArgs e)
+        {
+            //close logic here
+            //if(bHasPythonStarted)
+            //{
+            try
+            {
+                Process.GetProcessById(SettingsHolder.PythonProcessId).Kill();
+            }
+            catch (Exception ex)
+            {
+
+                Console.WriteLine(ex.Message);
+            }
+                
+            //}
+            
+            base.OnClosing(e);
+        }
     }
 
     static class ExtMethods
@@ -421,6 +443,16 @@ namespace CollisionAvoidance
 
     static class CLI
     {
+        private const int SW_MAXIMIZE = 3;
+        private const int SW_MINIMIZE = 6;
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+
+        public static void MinimizeWindow(IntPtr hwnd)
+        {
+            ShowWindow(hwnd, SW_MINIMIZE);
+        }
         public static void RunProcess(ref bool IsStarted)
         {
             // Set working directory and create process
@@ -432,13 +464,16 @@ namespace CollisionAvoidance
             start.RedirectStandardOutput = true;
             start.RedirectStandardError = true;
             start.WorkingDirectory = curDir.FullName;
+            start.WindowStyle = ProcessWindowStyle.Minimized;
             string stdout, stderr;
             using (Process process = Process.Start(start))
             {
                 long AffinityMask = (long)process.ProcessorAffinity;
                 AffinityMask &= 0x0001; // use only any of the first 4 available processors
                 process.ProcessorAffinity = (IntPtr)AffinityMask;
-
+                SettingsHolder.PythonProcessId = process.Id;
+                MinimizeWindow(Process.GetProcessById(process.Id).MainWindowHandle);
+                IsStarted = true;
                 using (StreamReader reader = process.StandardOutput)
                 {
                     stdout = reader.ReadToEnd();
@@ -448,7 +483,7 @@ namespace CollisionAvoidance
                 {
                     stderr = reader.ReadToEnd();
                 }
-                IsStarted = true;
+                
                 process.WaitForExit();
             }
            
