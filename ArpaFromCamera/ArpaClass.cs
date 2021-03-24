@@ -100,7 +100,7 @@ namespace ArpaFromCamera
         static ArpaClass()
         {
             lockObject = new object();
-            rgxRangeAz = new Regex(@"(?<=#AZ#)[\d.#]*");
+            rgxRangeAz = new Regex(@"(?<=#AZ#)[-+\d.#]*");
         }
         public static bool Init()
         {
