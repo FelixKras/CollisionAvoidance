@@ -13,7 +13,7 @@ namespace CollisionAvoidance
     static class Program
     {
 
-        public const string versionNumber = "1.0.1.0";
+        public const string versionNumber = "1.0.1.2";
         public const string version = "Collision avoidance app: " + versionNumber;
         /// <summary>
         /// The main entry point for the application.
@@ -52,8 +52,8 @@ namespace CollisionAvoidance
                             instance.VDistance = 500;
                             instance.ScoreThresh = 0.5;
                             instance.CamFOV = 20;
-                            instance.DZoneVert = 10;
-                            instance.DZoneHor = 10;
+                            instance.DZoneVert = 60;
+                            instance.DZoneHor = 35;
                             instance.ShowBoxes = true;
                             instance.ShowDZ = true;
                         }

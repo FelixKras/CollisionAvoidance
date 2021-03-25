@@ -473,6 +473,7 @@ namespace CollisionAvoidance
                 long AffinityMask = (long)process.ProcessorAffinity;
                 AffinityMask &= 0x0001; // use only any of the first 4 available processors
                 process.ProcessorAffinity = (IntPtr)AffinityMask;
+                process.PriorityClass = ProcessPriorityClass.BelowNormal;
                 SettingsHolder.PythonProcessId = process.Id;
                 MinimizeWindow(Process.GetProcessById(process.Id).MainWindowHandle);
                 IsStarted = true;
