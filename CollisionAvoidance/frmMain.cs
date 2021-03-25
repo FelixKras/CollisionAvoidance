@@ -75,6 +75,7 @@ namespace CollisionAvoidance
         public frmMain()
         {
             InitializeComponent();
+            this.Text = Program.version;
             cancelEvent = new CancellationTokenSource();
             CollisionWarningEvent += CollisionHandler;
             AlertEvent += OnReceivedMessage;
