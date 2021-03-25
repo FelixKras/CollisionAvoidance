@@ -151,7 +151,8 @@ namespace ArpaFromCamera
                 arpaMsg.TargetTime = DateTime.UtcNow;
                 arpaMsg.TargetDistance = Range;
                 arpaMsg.TargetBearing = Az;
-                arpaMsg.TargetSpeed = 20;
+                arpaMsg.TargetSpeed = 0;
+                arpaMsg.TargetCourse = 0;
                 string str = arpaMsg.ToString();
                 Interlocked.Exchange(ref IsDataAvail, 1);
             }
@@ -159,7 +160,7 @@ namespace ArpaFromCamera
 
         }
 
-        public static string GetArpa(double Long, double Lat, double Heading)
+        public static string GetArpa(double Heading)
         {
             string result = string.Empty;
             if (Interlocked.CompareExchange(ref IsDataAvail, 0, 1) == 1)
@@ -205,7 +206,7 @@ namespace ArpaFromCamera
 
             while (true)
             {
-                ArpaClass.GetArpa(0, 0, 10);
+                ArpaClass.GetArpa( 10);
             }
         }
 
