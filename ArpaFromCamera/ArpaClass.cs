@@ -139,7 +139,7 @@ namespace ArpaFromCamera
         private static void ParseData(byte[] message)
         {
             string sData = ASCIIEncoding.ASCII.GetString(message);
-            string[] s1Arpas = sData.Split(new string[] { "<EOF>" }, StringSplitOptions.RemoveEmptyEntries);
+            string[] s1Arpas = sData.Split(new string[] { "<EOL>" }, StringSplitOptions.RemoveEmptyEntries);
             lock (lockObject)
             {
                 arpaMsgs = new ArpaMsgDTO[s1Arpas.Length];
@@ -161,9 +161,10 @@ namespace ArpaFromCamera
                         arpaMsgs[ii].TargetSpeed = 0;
                         arpaMsgs[ii].TargetCourse = 0;
                         string str = arpaMsgs[ii].ToString();
-                        Interlocked.Exchange(ref IsDataAvail, 1);
+                        
                     }
                 }
+                Interlocked.Exchange(ref IsDataAvail, 1);
             }
         }
         public static string[] GetArpa(double Heading)

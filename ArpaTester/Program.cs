@@ -15,7 +15,7 @@ namespace ArpaTester
             {
                 AutoResetEvent are = new AutoResetEvent(true);
                 ArpaFromCamera.ArpaClass.Init();
-                int ii = 10;
+                int ii = 1000;
                 while (ii-->0)
                 {
                     are.WaitOne(1000);
