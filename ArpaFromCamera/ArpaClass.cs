@@ -67,7 +67,7 @@ namespace ArpaFromCamera
             TargetCPATime = 0;
             TargetStatus = 'T';
             TargetReference = ' ';
-            result = string.Format("$RATTM,{0:D},{1:F1},{2:F1},{3},{4:F1},{5:F1},{6},{7:F1},{8:F1},{9},{10},{11},{12},{13},{14},{{15}}",
+            result = string.Format("$RATTM,{0:D},{1:F1},{2:F1},{3},{4:F1},{5:F1},{6},{7:F1},{8:F1},{9},{10},{11},{12},{13},{14}",
                 TargetNumber, TargetDistance, TargetBearing, TargetBearingUnits,
                 TargetSpeed, TargetCourse, TargetCourseUnits, TargetCPADist, TargetCPATime, TargetSpeedDistUnits,
                 TargetName, TargetStatus, TargetReference, TargetTime.ToString("hhmmss.ss"), "a*");
@@ -92,7 +92,7 @@ namespace ArpaFromCamera
     public static class ArpaClass
     {
         static UdpClient udpc;
-        static Regex rgxRangeAz;
+        static Regex rgxIDRangeAz;
         static volatile int IsDataAvail;
         static ArpaMsgDTO[] arpaMsgs;
         readonly static object lockObject;
@@ -100,7 +100,7 @@ namespace ArpaFromCamera
         static ArpaClass()
         {
             lockObject = new object();
-            rgxRangeAz = new Regex(@"(?<=#AZ#)[-+\d.#]*");
+            rgxIDRangeAz = new Regex(@"(?<=#TARGETID#RNG#AZ)[-+\d.#]*");
         }
         public static bool Init()
         {
@@ -146,22 +146,23 @@ namespace ArpaFromCamera
 
                 for (int ii = 0; ii < s1Arpas.Length; ii++)
                 {
-                    Match mtch = rgxRangeAz.Match(sData);
-                    string[] split = mtch.Value.Split(new char[] { '#' });
-                    double Range = double.Parse(split[0]);
-                    double Az = double.Parse(split[1]);
+                    Match mtch = rgxIDRangeAz.Match(s1Arpas[ii]);
+                    string[] split = mtch.Value.Split(new char[] { '#' },StringSplitOptions.RemoveEmptyEntries);
+                    int ID = int.Parse(split[0]);
+                    double Range = double.Parse(split[1]);
+                    double Az = double.Parse(split[2]);
 
                     lock (lockObject)
                     {
                         arpaMsgs[ii] = new ArpaMsgDTO();
-                        arpaMsgs[ii].TargetName = "OpticColAv";
+                        arpaMsgs[ii].TargetName = "OpticColAv_"+ID;
                         arpaMsgs[ii].TargetTime = DateTime.UtcNow;
                         arpaMsgs[ii].TargetDistance = Range;
                         arpaMsgs[ii].TargetBearing = Az;
                         arpaMsgs[ii].TargetSpeed = 0;
                         arpaMsgs[ii].TargetCourse = 0;
                         string str = arpaMsgs[ii].ToString();
-                        
+
                     }
                 }
                 Interlocked.Exchange(ref IsDataAvail, 1);

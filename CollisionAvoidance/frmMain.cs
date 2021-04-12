@@ -116,7 +116,7 @@ namespace CollisionAvoidance
             string msg = string.Empty;
             for (int ii = 0; ii < colDetect.Length; ii++)
             {
-                msg+= string.Format("#WARNING#TARGET_{0:G}#RNG#AZ#{1:F3}#{2:F3}<EOL>", colDetect[ii].Class, SettingsHolder.Instance.VDistance, colDetect[ii].Azimuth);
+                msg+= string.Format("#WARNING#TARGETID#RNG#AZ#{0:D}#{1:F3}#{2:F3}<EOL>", colDetect[ii].Class, SettingsHolder.Instance.VDistance, colDetect[ii].Azimuth);
 
             }
 
@@ -178,7 +178,7 @@ namespace CollisionAvoidance
 
                     Console.WriteLine("Read: \"{0}\" bytes", imgBytes.Length);
 
-                    int[] Classes = new int[len4];
+                    byte[] Classes = new byte[len4];
                     float[] Scores = new float[len4];
                     float[] ymin = new float[len4];
                     float[] xmin = new float[len4];
@@ -304,7 +304,7 @@ namespace CollisionAvoidance
             }
         }
 
-        private void FillList(List<Detection> lstDetect, float[] scores, int[] classes, float[] ymin, float[] xmin, float[] ymax, float[] xmax, Size imgsize)
+        private void FillList(List<Detection> lstDetect, float[] scores, byte[] classes, float[] ymin, float[] xmin, float[] ymax, float[] xmax, Size imgsize)
         {
             for (int i = 0; i < scores.Length; i++)
             {

@@ -13,7 +13,7 @@ namespace CollisionAvoidance
     static class Program
     {
 
-        public const string versionNumber = "1.0.1.2";
+        public const string versionNumber = "1.0.1.3";
         public const string version = "Collision avoidance app: " + versionNumber;
         /// <summary>
         /// The main entry point for the application.
