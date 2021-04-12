@@ -97,7 +97,7 @@ namespace ArpaFromCamera
         static ArpaMsgDTO[] arpaMsgs;
         readonly static object lockObject;
 
-        public const string versionNumber = "1.0.0.2";
+        public const string versionNumber = "1.0.0.3";
         public const string version = "Arpa receiving library: " + versionNumber;
 
         static ArpaClass()

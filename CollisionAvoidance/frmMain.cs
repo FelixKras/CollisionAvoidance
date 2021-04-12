@@ -74,6 +74,7 @@ namespace CollisionAvoidance
 
         public frmMain()
         {
+
             InitializeComponent();
             this.Text = Program.version;
             cancelEvent = new CancellationTokenSource();
@@ -81,6 +82,7 @@ namespace CollisionAvoidance
             AlertEvent += OnReceivedMessage;
             bHasPythonStarted = false;
             SettingsHolder.PythonProcessId = -1;
+            string[] args = Environment.GetCommandLineArgs();
         }
 
         private void imageGrabbedEvent(object sender, EventArgs e)
@@ -116,7 +118,7 @@ namespace CollisionAvoidance
             string msg = string.Empty;
             for (int ii = 0; ii < colDetect.Length; ii++)
             {
-                msg+= string.Format("#WARNING#TARGETID#RNG#AZ#{0:D}#{1:F3}#{2:F3}<EOL>", colDetect[ii].Class, SettingsHolder.Instance.VDistance, colDetect[ii].Azimuth);
+                msg += string.Format("#WARNING#TARGETID#RNG#AZ#{0:D}#{1:F3}#{2:F3}<EOL>", colDetect[ii].Class, SettingsHolder.Instance.VDistance, colDetect[ii].Azimuth);
 
             }
 
@@ -321,7 +323,7 @@ namespace CollisionAvoidance
 
         private void button1_Click(object sender, EventArgs e)
         {
-
+            //todo: extract to method, call it at the end of form constructor if a cseccondf cli argument is -auto (or something similar)
             if (thrPipe == null)
             {
                 thrPipe = new Thread(run_server);
