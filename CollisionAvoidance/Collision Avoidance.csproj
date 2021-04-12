@@ -52,6 +52,9 @@
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
+<PropertyGroup>   
+    <ResourceLanguages>en</ResourceLanguages>
+</PropertyGroup>
   <PropertyGroup>
     <ManifestCertificateThumbprint>E34648E0FEF2C01FC69E023F721B234392CAA0F0</ManifestCertificateThumbprint>
   </PropertyGroup>
