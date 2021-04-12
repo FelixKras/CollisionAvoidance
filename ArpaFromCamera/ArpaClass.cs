@@ -73,7 +73,7 @@ namespace ArpaFromCamera
                 TargetName, TargetStatus, TargetReference, TargetTime.ToString("hhmmss.ss"), "a*");
 
             result += CalcChecksum(result).ToString("X2") + "\r\n";
-            
+
             return result;
         }
 
@@ -94,7 +94,7 @@ namespace ArpaFromCamera
         static UdpClient udpc;
         static Regex rgxRangeAz;
         static volatile int IsDataAvail;
-        static ArpaMsgDTO arpaMsg;
+        static ArpaMsgDTO[] arpaMsgs;
         readonly static object lockObject;
 
         static ArpaClass()
@@ -108,7 +108,7 @@ namespace ArpaFromCamera
             try
             {
 
-                arpaMsg = new ArpaMsgDTO();
+                arpaMsgs = new ArpaMsgDTO[10];
                 udpc = new UdpClient(36666);
                 udpc.BeginReceive(new AsyncCallback(OnUdpData), udpc);
 
@@ -139,44 +139,54 @@ namespace ArpaFromCamera
         private static void ParseData(byte[] message)
         {
             string sData = ASCIIEncoding.ASCII.GetString(message);
-            Match mtch = rgxRangeAz.Match(sData);
-            string[] split = mtch.Value.Split(new char[] { '#' });
-            double Range = double.Parse(split[0]);
-            double Az = double.Parse(split[1]);
-
+            string[] s1Arpas = sData.Split(new string[] { "<EOF>" }, StringSplitOptions.RemoveEmptyEntries);
             lock (lockObject)
             {
-                arpaMsg = new ArpaMsgDTO();
-                arpaMsg.TargetName = "OpticColAv";
-                arpaMsg.TargetTime = DateTime.UtcNow;
-                arpaMsg.TargetDistance = Range;
-                arpaMsg.TargetBearing = Az;
-                arpaMsg.TargetSpeed = 0;
-                arpaMsg.TargetCourse = 0;
-                string str = arpaMsg.ToString();
-                Interlocked.Exchange(ref IsDataAvail, 1);
+                arpaMsgs = new ArpaMsgDTO[s1Arpas.Length];
+
+                for (int ii = 0; ii < s1Arpas.Length; ii++)
+                {
+                    Match mtch = rgxRangeAz.Match(sData);
+                    string[] split = mtch.Value.Split(new char[] { '#' });
+                    double Range = double.Parse(split[0]);
+                    double Az = double.Parse(split[1]);
+
+                    lock (lockObject)
+                    {
+                        arpaMsgs[ii] = new ArpaMsgDTO();
+                        arpaMsgs[ii].TargetName = "OpticColAv";
+                        arpaMsgs[ii].TargetTime = DateTime.UtcNow;
+                        arpaMsgs[ii].TargetDistance = Range;
+                        arpaMsgs[ii].TargetBearing = Az;
+                        arpaMsgs[ii].TargetSpeed = 0;
+                        arpaMsgs[ii].TargetCourse = 0;
+                        string str = arpaMsgs[ii].ToString();
+                        Interlocked.Exchange(ref IsDataAvail, 1);
+                    }
+                }
             }
-
-
         }
-
-        public static string GetArpa(double Heading)
+        public static string[] GetArpa(double Heading)
         {
-            string result = string.Empty;
+
+
+            string[] result;
             if (Interlocked.CompareExchange(ref IsDataAvail, 0, 1) == 1)
             {
                 lock (lockObject)
                 {
-                    arpaMsg.TargetBearing += Heading; //regard 360, maybe put %
-                    arpaMsg.TargetCourse = -arpaMsg.TargetBearing;
-                    result = arpaMsg.ToString();
+                    result = new string[arpaMsgs.Length];
+                    for (int ii = 0; ii < arpaMsgs.Length; ii++)
+                    {
+                        arpaMsgs[ii].TargetBearing += Heading; //regard 360, maybe put %
+                        arpaMsgs[ii].TargetCourse = -arpaMsgs[ii].TargetBearing;
+                        result[ii] = arpaMsgs[ii].ToString();
+                    }
                 }
-
-
             }
             else
             {
-                result = string.Empty;
+                result = new string[0];
             }
 
 
@@ -188,7 +198,7 @@ namespace ArpaFromCamera
             if (udpc != null)
             {
                 udpc.Close();
-                udpc.Dispose();
+
             }
         }
 
@@ -206,7 +216,7 @@ namespace ArpaFromCamera
 
             while (true)
             {
-                ArpaClass.GetArpa( 10);
+                ArpaClass.GetArpa(10);
             }
         }
 

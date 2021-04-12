@@ -56,6 +56,7 @@ namespace CollisionAvoidance
                             instance.DZoneHor = 35;
                             instance.ShowBoxes = true;
                             instance.ShowDZ = true;
+                            instance.NumberOfDangerTargets = 10;
                         }
                     }
                 }
@@ -124,6 +125,13 @@ namespace CollisionAvoidance
         [Description("Vertical angle from buttom to treat as a danger [percent of FOV]")]
         public double DZoneVert { get; set; }
 
+        [Category("3. Detection module")]
+        [DisplayName("Number of targets")]
+        [ReadOnly(false)]
+        [Description("Number of targets in danger zone to send as arpa")]
+        public int NumberOfDangerTargets { get;  set; }
+
+
         [Category("4. UI options")]
         [DisplayName("Show detection boxes")]
         [ReadOnly(false)]
@@ -135,9 +143,7 @@ namespace CollisionAvoidance
         [ReadOnly(false)]
         [Description("Show danger zone")]
         public bool ShowDZ { get; set; }
-
-
-
+        
         public void Dispose()
         {
             lock (syncroot)

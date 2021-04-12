@@ -61,12 +61,12 @@ namespace CollisionAvoidance
 
         internal class CollisionEventArgs : EventArgs
         {
-            internal Detection colDetect;
+            internal Detection[] colDetect;
             public CollisionEventArgs()
             {
 
             }
-            public CollisionEventArgs(Detection det)
+            public CollisionEventArgs(Detection[] det)
             {
                 this.colDetect = det;
             }
@@ -102,16 +102,24 @@ namespace CollisionAvoidance
         }
         private void CollisionHandler(CollisionEventArgs e)
         {
-            AlertEvent.Raise(string.Format("Collision detected. AZ: {0:F3}", e.colDetect.Azimuth));
+            for (int ii = 0; ii < e.colDetect.Length; ii++)
+            {
+                AlertEvent.Raise(string.Format("Collision detected. AZ: {0:F3}", e.colDetect[ii].Azimuth));
+            }
             SendUdpMessage(e.colDetect);
         }
 
-        private void SendUdpMessage(Detection colDetect)
+        private void SendUdpMessage(Detection[] colDetect)
         {
             UdpClient udpc = new UdpClient();
             IPEndPoint remoteIPE = new IPEndPoint(IPAddress.Parse(SettingsHolder.Instance.IPAddress), SettingsHolder.Instance.IPPort);
-            string msg = string.Format("#WARNING#TARGET#RNG#AZ#{0:F3}#{1:F3}", SettingsHolder.Instance.VDistance, colDetect.Azimuth);
-            
+            string msg = string.Empty;
+            for (int ii = 0; ii < colDetect.Length; ii++)
+            {
+                msg+= string.Format("#WARNING#TARGET_{0:G}#RNG#AZ#{1:F3}#{2:F3}<EOL>", colDetect[ii].Class, SettingsHolder.Instance.VDistance, colDetect[ii].Azimuth);
+
+            }
+
             udpc.Send(msg.GetBytes(), msg.Length, remoteIPE);
             AlertEvent.Raise("Warning Sent");
         }
@@ -138,13 +146,13 @@ namespace CollisionAvoidance
         void run_server()
         {
 
-            if(!bHasPythonStarted)
+            if (!bHasPythonStarted)
             {
                 Thread thrPyhtonProcess = new Thread(() => { CLI.RunProcess(ref bHasPythonStarted); });
                 thrPyhtonProcess.IsBackground = true;
                 thrPyhtonProcess.Start();
-                
-                
+
+
             }
             BinaryReader br = InitPipe();
 
@@ -266,18 +274,24 @@ namespace CollisionAvoidance
             double Top = img.Size.Height - (SettingsHolder.Instance.DZoneVert / 100 * img.Size.Height);
             double Bottom = img.Size.Height;
             DZrect = new Rectangle((int)Left, (int)Top, (int)(Right - Left), (int)(Bottom - Top));
+            List<Detection> lstDangerTarg = new List<Detection>();
             if (SettingsHolder.Instance.ShowDZ)
             {
                 Emgu.CV.CvInvoke.Rectangle(img, DZrect, new MCvScalar(0, 0, 255));
             }
             for (int i = 0; i < lstDetect.Count; i++)
             {
-                if (DZrect.Contains(lstDetect[i].GetCenter))
+                if (DZrect.Contains(lstDetect[i].GetCenter) && lstDangerTarg.Count < SettingsHolder.Instance.NumberOfDangerTargets)
                 {
-                    CollisionWarningEvent(new CollisionEventArgs(lstDetect[i]));
+                    lstDangerTarg.Add(lstDetect[i]);
                 }
             }
+            if (lstDangerTarg.Count > 0)
+            {
 
+                CollisionWarningEvent(new CollisionEventArgs(lstDangerTarg.ToArray()));
+
+            }
 
 
         }
@@ -365,9 +379,9 @@ namespace CollisionAvoidance
 
                 Console.WriteLine(ex.Message);
             }
-                
+
             //}
-            
+
             base.OnClosing(e);
         }
     }
@@ -407,7 +421,7 @@ namespace CollisionAvoidance
             int totalcnt = collection.Count;
             for (int i = 0; i < totalcnt - cnt; i++)
             {
-                collection.RemoveAt(totalcnt - i-1);
+                collection.RemoveAt(totalcnt - i - 1);
             }
             return collection;
         }
@@ -461,7 +475,7 @@ namespace CollisionAvoidance
             DirectoryInfo curDir = new FileInfo(Application.ExecutablePath).Directory;
             ProcessStartInfo start = new ProcessStartInfo();
             start.FileName = "cmd.exe";
-            start.Arguments = "/K "+curDir+"\\run_script.bat";
+            start.Arguments = "/K " + curDir + "\\run_script.bat";
             start.UseShellExecute = false;
             start.RedirectStandardOutput = true;
             start.RedirectStandardError = true;
@@ -486,10 +500,10 @@ namespace CollisionAvoidance
                 {
                     stderr = reader.ReadToEnd();
                 }
-                
+
                 process.WaitForExit();
             }
-           
+
         }
     }
 }
