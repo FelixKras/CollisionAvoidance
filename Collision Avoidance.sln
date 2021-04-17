@@ -1,13 +1,15 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28307.902
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31019.35
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Collision Avoidance", "CollisionAvoidance\Collision Avoidance.csproj", "{2B423BA6-D655-4ADB-9150-2E3788F5E9EC}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ArpaFromCamera", "ArpaFromCamera\ArpaFromCamera.csproj", "{D8D4ECA9-BBD9-4217-B205-62A0EC3733BA}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ArpaTester", "ArpaTester\ArpaTester.csproj", "{79E06E1F-A1DE-40E3-BD09-92E70F6D2014}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TFDetect", "TFDetect\TFDetect.csproj", "{CB5D6225-A7BE-47C1-9FBD-DCA1E5432EF1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -18,22 +20,28 @@ Global
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{2B423BA6-D655-4ADB-9150-2E3788F5E9EC}.All|Any CPU.ActiveCfg = Release|Any CPU
 		{2B423BA6-D655-4ADB-9150-2E3788F5E9EC}.All|Any CPU.Build.0 = Release|Any CPU
-		{2B423BA6-D655-4ADB-9150-2E3788F5E9EC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{2B423BA6-D655-4ADB-9150-2E3788F5E9EC}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{2B423BA6-D655-4ADB-9150-2E3788F5E9EC}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{2B423BA6-D655-4ADB-9150-2E3788F5E9EC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2B423BA6-D655-4ADB-9150-2E3788F5E9EC}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{2B423BA6-D655-4ADB-9150-2E3788F5E9EC}.Debug|Any CPU.Build.0 = Debug|x64
+		{2B423BA6-D655-4ADB-9150-2E3788F5E9EC}.Release|Any CPU.ActiveCfg = Release|x64
+		{2B423BA6-D655-4ADB-9150-2E3788F5E9EC}.Release|Any CPU.Build.0 = Release|x64
 		{D8D4ECA9-BBD9-4217-B205-62A0EC3733BA}.All|Any CPU.ActiveCfg = Release|Any CPU
 		{D8D4ECA9-BBD9-4217-B205-62A0EC3733BA}.All|Any CPU.Build.0 = Release|Any CPU
-		{D8D4ECA9-BBD9-4217-B205-62A0EC3733BA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D8D4ECA9-BBD9-4217-B205-62A0EC3733BA}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{D8D4ECA9-BBD9-4217-B205-62A0EC3733BA}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{D8D4ECA9-BBD9-4217-B205-62A0EC3733BA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D8D4ECA9-BBD9-4217-B205-62A0EC3733BA}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{D8D4ECA9-BBD9-4217-B205-62A0EC3733BA}.Debug|Any CPU.Build.0 = Debug|x64
+		{D8D4ECA9-BBD9-4217-B205-62A0EC3733BA}.Release|Any CPU.ActiveCfg = Release|x64
+		{D8D4ECA9-BBD9-4217-B205-62A0EC3733BA}.Release|Any CPU.Build.0 = Release|x64
 		{79E06E1F-A1DE-40E3-BD09-92E70F6D2014}.All|Any CPU.ActiveCfg = Release|Any CPU
 		{79E06E1F-A1DE-40E3-BD09-92E70F6D2014}.All|Any CPU.Build.0 = Release|Any CPU
-		{79E06E1F-A1DE-40E3-BD09-92E70F6D2014}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{79E06E1F-A1DE-40E3-BD09-92E70F6D2014}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{79E06E1F-A1DE-40E3-BD09-92E70F6D2014}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{79E06E1F-A1DE-40E3-BD09-92E70F6D2014}.Release|Any CPU.Build.0 = Release|Any CPU
+		{79E06E1F-A1DE-40E3-BD09-92E70F6D2014}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{79E06E1F-A1DE-40E3-BD09-92E70F6D2014}.Debug|Any CPU.Build.0 = Debug|x64
+		{79E06E1F-A1DE-40E3-BD09-92E70F6D2014}.Release|Any CPU.ActiveCfg = Release|x64
+		{79E06E1F-A1DE-40E3-BD09-92E70F6D2014}.Release|Any CPU.Build.0 = Release|x64
+		{CB5D6225-A7BE-47C1-9FBD-DCA1E5432EF1}.All|Any CPU.ActiveCfg = Debug|Any CPU
+		{CB5D6225-A7BE-47C1-9FBD-DCA1E5432EF1}.All|Any CPU.Build.0 = Debug|Any CPU
+		{CB5D6225-A7BE-47C1-9FBD-DCA1E5432EF1}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{CB5D6225-A7BE-47C1-9FBD-DCA1E5432EF1}.Debug|Any CPU.Build.0 = Debug|x64
+		{CB5D6225-A7BE-47C1-9FBD-DCA1E5432EF1}.Release|Any CPU.ActiveCfg = Release|x64
+		{CB5D6225-A7BE-47C1-9FBD-DCA1E5432EF1}.Release|Any CPU.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
