@@ -46,6 +46,7 @@ namespace CollisionAvoidance
                         if (instance == null)
                         {
                             instance = new SettingsHolder();
+                            instance.UsePythonTF = true;
                             instance.IPAddress = "127.0.0.1";
                             instance.IPPort = 36666;
                             instance.VidStream = "rtsp://192.168.10.14/bs1";
@@ -57,6 +58,8 @@ namespace CollisionAvoidance
                             instance.ShowBoxes = true;
                             instance.ShowDZ = true;
                             instance.NumberOfDangerTargets = 10;
+                            instance.ModelFile = "E:\\Download\\faster_rcnn_resnet50_smd_2019_01_29\\frozen_inference_graph.pb";
+                            instance.LabellFile = "E:\\Download\\faster_rcnn_resnet50_smd_2019_01_29\\label_map.pbtxt";
                         }
                     }
                 }
@@ -75,6 +78,12 @@ namespace CollisionAvoidance
 
         }
 
+        [Category("1. Communication Properties")]
+        [DisplayName("Use Python backend")]
+        [ReadOnly(false)]
+        [Description("Use Python backend for image grabbing and object detection")]
+        public bool UsePythonTF { get; set; }
+
 
         [Category("1. Communication Properties")]
         [DisplayName("IP address")]
@@ -90,8 +99,8 @@ namespace CollisionAvoidance
 
         [Category("1. Communication Properties")]
         [DisplayName("Video stream address")]
-        [ReadOnly(true)]
-        [Description("Address of camera stream - not in use")]
+        [ReadOnly(false)]
+        [Description("Address of camera stream. 0 for default webcam")]
         public string VidStream { get; set; }
 
 
@@ -143,7 +152,26 @@ namespace CollisionAvoidance
         [ReadOnly(false)]
         [Description("Show danger zone")]
         public bool ShowDZ { get; set; }
-        
+
+        [Category("5. TensorFlow Options")]
+        [DisplayName("Model file path")]
+        [ReadOnly(false)]
+        [EditorAttribute(typeof(myFileBrowser), typeof(System.Drawing.Design.UITypeEditor))]
+        [Description("Model file path (.pb)")]
+        public string ModelFile { get; set; }
+
+        [Category("5. TensorFlow Options")]
+        [DisplayName("Label file path")]
+        [ReadOnly(false)]
+        [EditorAttribute(typeof(myFileBrowser), typeof(System.Drawing.Design.UITypeEditor))]
+        [Description("Label file path (.pbtxt)")]
+        public string LabellFile { get; set; }
+
+
+
+
+
+
         public void Dispose()
         {
             lock (syncroot)

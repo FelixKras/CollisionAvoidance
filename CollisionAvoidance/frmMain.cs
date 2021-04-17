@@ -1,8 +1,8 @@
 ﻿using Emgu.CV;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
 using System.Drawing;
 using System.Linq;
 using System.Text;
@@ -16,28 +16,31 @@ using System.Threading;
 using System.Net.Sockets;
 using System.Net;
 using System.Diagnostics;
+using System.Drawing.Drawing2D;
 using System.Runtime.InteropServices;
+using Emgu.CV.CvEnum;
 
 namespace CollisionAvoidance
 {
     public partial class frmMain : Form
     {
-        VideoCapture cap;
-        Mat inputFrame = new Mat();
-        CancellationTokenSource cancelEvent;
-        Thread thrPipe;
-        Thread thrPipeConnection;
-        NamedPipeServerStream server;
-        bool bHasPythonStarted;
-
-        delegate void CollEventDelegate(CollisionEventArgs _args);
-        event CollEventDelegate CollisionWarningEvent;
-        EventHandler AlertEvent;
+        private VideoCapture cap;
+        private Mat inputFrame = new Mat();
+        private CancellationTokenSource cancelEvent;
+        private Thread thrServer;
+        private Thread thrPipeConnection;
+        private NamedPipeServerStream server;
+        private bool bHasPythonStarted;
+        private ConcurrentQueue<Image<Bgr, byte>> grabbedImages;
+        private delegate void CollEventDelegate(CollisionEventArgs _args);
+        private event CollEventDelegate CollisionWarningEvent;
+        private EventHandler AlertEvent;
 
         internal class Detection
         {
             internal float Score;
             internal int Class;
+            internal string ClassName;
             internal RectangleF BBox;
             internal double Azimuth;
 
@@ -56,6 +59,15 @@ namespace CollisionAvoidance
                 this.Class = c;
                 this.BBox = rectangleF;
                 this.Azimuth = az;
+            }
+
+            public Detection(float v, int c, RectangleF rectangleF, double az, string s)
+            {
+                this.Score = v;
+                this.Class = c;
+                this.BBox = rectangleF;
+                this.Azimuth = az;
+                this.ClassName = s;
             }
         }
 
@@ -85,17 +97,24 @@ namespace CollisionAvoidance
             string[] args = Environment.GetCommandLineArgs();
         }
 
+
+
         private void imageGrabbedEvent(object sender, EventArgs e)
         {
 
             try
             {
                 cap.Retrieve(inputFrame);
+                Image<Bgr, byte> LatestAcquiredImage = inputFrame.ToImage<Bgr, byte>();
 
-                Bitmap LatestAcquiredImage = inputFrame.ToBitmap();
-
-                pictureBox1.Image = LatestAcquiredImage;
-                //imgEntrada = m.ToImage<Bgr, byte>();
+                grabbedImages.Enqueue(LatestAcquiredImage);
+                if (grabbedImages?.Count > 5)
+                {
+                    while (grabbedImages?.Count > 1)
+                    {
+                        grabbedImages.TryDequeue(out _);
+                    }
+                }
             }
             catch (Exception Ex)
             {
@@ -145,6 +164,8 @@ namespace CollisionAvoidance
                 //lstMessages.Insert(0, sMsgToDisplay);
             }
         }
+
+
         void run_server()
         {
 
@@ -153,8 +174,8 @@ namespace CollisionAvoidance
                 Thread thrPyhtonProcess = new Thread(() => { CLI.RunProcess(ref bHasPythonStarted); });
                 thrPyhtonProcess.IsBackground = true;
                 thrPyhtonProcess.Start();
-
-
+                
+                
             }
             BinaryReader br = InitPipe();
 
@@ -209,10 +230,7 @@ namespace CollisionAvoidance
 
                     pictureBox1.Image = img.ToBitmap();
 
-                    //var buf = Encoding.ASCII.GetBytes("received");     // Get ASCII byte array     
-                    //bw.Write((uint)buf.Length);                // Write string length
-                    //bw.Write(buf);                              // Write string
-                    //Console.WriteLine("Wrote: \"{0}\" bytes", buf.Length);
+
                 }
             }
             catch (EndOfStreamException)
@@ -239,6 +257,55 @@ namespace CollisionAvoidance
             Console.WriteLine("Client disconnected.");
             server.Close();
             server.Dispose();
+            cancelEvent = new CancellationTokenSource();
+        }
+
+        void run_TFdetector()
+        {
+            TFDetect.TFDetect.Init(SettingsHolder.Instance.ModelFile, SettingsHolder.Instance.LabellFile);
+            Image<Bgr, byte> grabbedImage = null;
+            while (!cancelEvent.IsCancellationRequested)
+            {
+
+                if (grabbedImages != null && grabbedImages.TryDequeue(out grabbedImage) && grabbedImage.Width * grabbedImage.Height > 0)
+                {
+                    TFDetect.Results resultsFromTF = null;
+                    var sw = Stopwatch.StartNew();
+                    TFDetect.TFDetect.Predict(grabbedImage.ToBitmap(), ref resultsFromTF);
+                    sw.Stop();
+
+                    /*
+                    Rectangle rect = new Rectangle()
+                    {
+                        X = (int)left,
+                        Y = (int)top,
+                        Width = (int)(right - left),
+                        Height = (int)(bottom - top)
+                    };
+                    */
+
+            
+
+
+                    List<Detection> lstDetect = new List<Detection>();
+                    FillList(lstDetect, resultsFromTF.Scores, resultsFromTF.ClassesID,
+                        resultsFromTF.top, resultsFromTF.left, resultsFromTF.right,
+                        resultsFromTF.bottom, grabbedImage.Size, resultsFromTF.ClassesName);
+                    AlertEvent.Raise(string.Format("Received {0:D} targets above thresh ({1:F1})", lstDetect.Count, SettingsHolder.Instance.ScoreThresh));
+                    CheckIfInDangerZone(ref grabbedImage, lstDetect);
+                    if (SettingsHolder.Instance.ShowBoxes)
+                    {
+                        DrawDetectionBoxes(ref grabbedImage, lstDetect);
+                    }
+                    pictureBox1.Image = grabbedImage.ToBitmap();
+                }
+                else
+                {
+                    Thread.Sleep(0);
+                }
+
+
+            }
             cancelEvent = new CancellationTokenSource();
         }
 
@@ -290,9 +357,7 @@ namespace CollisionAvoidance
             }
             if (lstDangerTarg.Count > 0)
             {
-
-                CollisionWarningEvent(new CollisionEventArgs(lstDangerTarg.ToArray()));
-
+                CollisionWarningEvent?.Invoke(new CollisionEventArgs(lstDangerTarg.ToArray()));
             }
 
 
@@ -302,11 +367,39 @@ namespace CollisionAvoidance
         {
             for (int i = 0; i < lstDetect.Count; i++)
             {
-                Emgu.CV.CvInvoke.Rectangle(img, lstDetect[i].BBox.ToRect(), new MCvScalar(0, 255, 0));
+                Emgu.CV.CvInvoke.Rectangle(img, lstDetect[i].BBox.ToRect(), new MCvScalar(0, 255, 255));
+                Point p = new Point(lstDetect[i].BBox.ToRect().Right + 5, lstDetect[i].BBox.ToRect().Top + 5);
+                string text = String.Empty;
+                if (string.IsNullOrEmpty(lstDetect[i].ClassName))
+                {
+                    text = string.Format("[id:{0}]:{1}%", lstDetect[i].Class, (int)(lstDetect[i].Score * 100));
+                }
+                else
+                {
+                    text = string.Format("{0}:{1}%", lstDetect[i].ClassName, (int)(lstDetect[i].Score * 100));
+                }
+
+                Emgu.CV.CvInvoke.PutText(img, text, p, FontFace.HersheyPlain, 1, new MCvScalar(0, 255, 255));
+
             }
         }
+        private void DrawDetectionBoxes2(Bitmap bmp, Rectangle rect, float score, string name)
+        {
+            using (Graphics graphic = Graphics.FromImage(bmp))
+            {
+                graphic.SmoothingMode = SmoothingMode.AntiAlias;
 
-        private void FillList(List<Detection> lstDetect, float[] scores, byte[] classes, float[] ymin, float[] xmin, float[] ymax, float[] xmax, Size imgsize)
+                using (Pen pen = new Pen(Color.Red, 2))
+                {
+                    graphic.DrawRectangle(pen, rect);
+
+                    Point p = new Point(rect.Right + 5, rect.Top + 5);
+                    string text = string.Format("{0}:{1}%", name, (int)(score * 100));
+                    graphic.DrawString(text, new Font("Verdana", 8), Brushes.Red, p);
+                }
+            }
+        }
+        private void FillList(List<Detection> lstDetect, float[] scores, byte[] classes, float[] ymin, float[] xmin, float[] ymax, float[] xmax, Size imgsize, string[] Names = null)
         {
             for (int i = 0; i < scores.Length; i++)
             {
@@ -315,7 +408,15 @@ namespace CollisionAvoidance
                 {
                     RectangleF rect = new RectangleF(xmin[i] * imgsize.Width, ymin[i] * imgsize.Height, (ymax[i] - ymin[i]) * imgsize.Height, (xmax[i] - xmin[i]) * imgsize.Width);
                     double az = (imgsize.Width / 2 - rect.Center().X) * SettingsHolder.Instance.CamFOV / imgsize.Width;
-                    lstDetect.Add(new Detection(scores[i], classes[i], rect, az));
+                    if (Names == null)
+                    {
+                        lstDetect.Add(new Detection(scores[i], classes[i], rect, az));
+                    }
+                    else
+                    {
+                        lstDetect.Add(new Detection(scores[i], classes[i], rect, az, Names[i]));
+                    }
+
                 }
             }
 
@@ -323,37 +424,105 @@ namespace CollisionAvoidance
 
         private void button1_Click(object sender, EventArgs e)
         {
-            //todo: extract to method, call it at the end of form constructor if a cseccondf cli argument is -auto (or something similar)
-            if (thrPipe == null)
+
+            if (SettingsHolder.Instance.UsePythonTF)
             {
-                thrPipe = new Thread(run_server);
-                thrPipe.IsBackground = true;
-                thrPipe.Start();
+                StartPipeServer();
+            }
+            else
+            {
+                StartTFServer();
+            }
+
+
+
+            button1.Text = "Started!";
+
+
+        }
+
+        private void StartPipeServer()
+        {
+            if (thrServer == null)
+            {
+                thrServer = new Thread(run_server);
+                thrServer.IsBackground = true;
+                thrServer.Start();
             }
             else
             {
                 cancelEvent.Cancel();
-                while ((thrPipe.ThreadState & (System.Threading.ThreadState.Stopped | System.Threading.ThreadState.Unstarted | System.Threading.ThreadState.WaitSleepJoin | System.Threading.ThreadState.AbortRequested)) == 0)
+                while ((thrServer.ThreadState & (System.Threading.ThreadState.Stopped | System.Threading.ThreadState.Unstarted |
+                                               System.Threading.ThreadState.WaitSleepJoin |
+                                               System.Threading.ThreadState.AbortRequested)) == 0)
                 {
-
-                    thrPipe.Abort();
+                    thrServer.Abort();
                     thrPipeConnection.Abort();
                     Thread.Sleep(1);
                 }
+
                 cancelEvent = new CancellationTokenSource();
-                thrPipe = new Thread(run_server);
-                thrPipe.IsBackground = true;
-                thrPipe.Start();
-
+                thrServer = new Thread(run_server);
+                thrServer.IsBackground = true;
+                thrServer.Start();
             }
-            button1.Text = "Started!";
+        }
+        private void StartTFServer()
+        {
+            Process process = Process.GetCurrentProcess();
 
-            //cap = new Emgu.CV.VideoCapture(@"rtsp://192.168.10.14/bs1");
+            int CamNum = -1;
+            if (int.TryParse(SettingsHolder.Instance.VidStream, out CamNum))
+            {
+                cap = new Emgu.CV.VideoCapture(CamNum);
+            }
+            else
+            {
+                cap = new Emgu.CV.VideoCapture(SettingsHolder.Instance.VidStream);
+            }
+
             if (cap != null && cap.IsOpened)
             {
+                if (grabbedImages == null)
+                {
+                    grabbedImages = new ConcurrentQueue<Image<Bgr, byte>>();
+                }
                 cap.ImageGrabbed += imageGrabbedEvent;
                 cap.Start();
             }
+            if (thrServer == null)
+            {
+                thrServer = new Thread(run_TFdetector);
+                thrServer.IsBackground = true;
+                thrServer.Priority = ThreadPriority.BelowNormal;
+                thrServer.Start();
+            }
+            else
+            {
+                cancelEvent.Cancel();
+                cap.Stop();
+                while ((thrServer.ThreadState & (System.Threading.ThreadState.Stopped | System.Threading.ThreadState.Unstarted |
+                                               System.Threading.ThreadState.WaitSleepJoin |
+                                               System.Threading.ThreadState.AbortRequested)) == 0)
+                {
+                    thrServer.Abort();
+                    Thread.Sleep(1);
+                }
+
+                cancelEvent = new CancellationTokenSource();
+                thrServer = new Thread(run_TFdetector);
+                thrServer.IsBackground = true;
+                thrServer.Priority = ThreadPriority.BelowNormal;
+                thrServer.Start();
+            }
+
+            long affinityMask = (long)process.ProcessorAffinity;
+            // 0xfff    = 1111 1111 1111
+            // 0x0001   = 0000 0000 0001
+            affinityMask &= 0x0001; // use only any of the first 4 available processors
+            process.Threads[thrServer.ManagedThreadId].ProcessorAffinity = (IntPtr)(affinityMask);
+            process.ProcessorAffinity = (IntPtr) (affinityMask);
+            process.PriorityClass = ProcessPriorityClass.BelowNormal;
         }
 
         private void settingsToolStripMenuItem_Click(object sender, EventArgs e)
