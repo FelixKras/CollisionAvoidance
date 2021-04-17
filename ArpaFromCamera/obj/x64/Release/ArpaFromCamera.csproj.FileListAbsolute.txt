@@ -1,0 +1,6 @@
+C:\Users\Felix\source\repos\FelixKras\CollisionAvoidance\ArpaFromCamera\obj\x64\Release\ArpaFromCamera.csprojAssemblyReference.cache
+C:\Users\Felix\source\repos\FelixKras\CollisionAvoidance\ArpaFromCamera\obj\x64\Release\ArpaFromCamera.csproj.CoreCompileInputs.cache
+C:\Users\Felix\source\repos\FelixKras\CollisionAvoidance\Binaries\ArpaFromCamera\ArpaFromCamera.dll
+C:\Users\Felix\source\repos\FelixKras\CollisionAvoidance\Binaries\ArpaFromCamera\ArpaFromCamera.pdb
+C:\Users\Felix\source\repos\FelixKras\CollisionAvoidance\ArpaFromCamera\obj\x64\Release\ArpaFromCamera.dll
+C:\Users\Felix\source\repos\FelixKras\CollisionAvoidance\ArpaFromCamera\obj\x64\Release\ArpaFromCamera.pdb
