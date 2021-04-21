@@ -99,7 +99,7 @@ namespace ArpaFromCamera
         private static int ValidArpaExpiration;
         private static int MaxNumTargets;
         private static int ArpaReceivePort;
-        public const string versionNumber = "1.0.0.4";
+        public const string versionNumber = "1.0.0.5";
         public const string version = "Arpa receiving library: " + versionNumber;
 
         static ArpaClass()
