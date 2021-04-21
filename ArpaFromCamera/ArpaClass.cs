@@ -99,7 +99,7 @@ namespace ArpaFromCamera
         private static int ValidArpaExpiration;
         private static int MaxNumTargets;
         private static int ArpaReceivePort;
-        public const string versionNumber = "1.0.0.4";
+        public const string versionNumber = "1.0.0.5";
         public const string version = "Arpa receiving library: " + versionNumber;
 
         static ArpaClass()
@@ -208,19 +208,19 @@ namespace ArpaFromCamera
         private static bool CheckIfArpaIsCurrent()
         {
             bool bRes = false;
-            if (arpaMsgs != null && arpaMsgs.Length > 0)
+            if (arpaMsgs?[0] != null )
             {
                 
-                if (arpaMsgs[0].TargetTime - DateTime.UtcNow > TimeSpan.FromSeconds(ValidArpaExpiration))
+                if ( DateTime.UtcNow - arpaMsgs[0].TargetTime > TimeSpan.FromSeconds(ValidArpaExpiration))
                 {
                     Interlocked.CompareExchange(ref IsDataAvail, 0, 1);
                 }
+                else
+                {
+                    bRes = true;
+                }
             }
-            else
-            {
-                bRes = true;
-            }
-            
+         
             return bRes;
         }
 
