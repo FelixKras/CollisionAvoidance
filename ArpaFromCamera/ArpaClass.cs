@@ -96,8 +96,10 @@ namespace ArpaFromCamera
         static volatile int IsDataAvail;
         static ArpaMsgDTO[] arpaMsgs;
         readonly static object lockObject;
-
-        public const string versionNumber = "1.0.0.3";
+        private static int ValidArpaExpiration;
+        private static int MaxNumTargets;
+        private static int ArpaReceivePort;
+        public const string versionNumber = "1.0.0.4";
         public const string version = "Arpa receiving library: " + versionNumber;
 
         static ArpaClass()
@@ -105,14 +107,19 @@ namespace ArpaFromCamera
             lockObject = new object();
             rgxIDRangeAz = new Regex(@"(?<=#TARGETID#RNG#AZ)[-+\d.#]*");
         }
-        public static bool Init()
+
+        public static bool Init(int NumTargets = 10, int ArpaExpiration = 10, int ReceivePort = 36666)
         {
+            ValidArpaExpiration = ArpaExpiration;
+            MaxNumTargets = NumTargets;
+            ArpaReceivePort = ReceivePort;
+
             bool bRes = false;
             try
             {
 
-                arpaMsgs = new ArpaMsgDTO[10];
-                udpc = new UdpClient(36666);
+                arpaMsgs = new ArpaMsgDTO[MaxNumTargets];
+                udpc = new UdpClient(ArpaReceivePort);
                 udpc.BeginReceive(new AsyncCallback(OnUdpData), udpc);
 
 
@@ -150,7 +157,7 @@ namespace ArpaFromCamera
                 for (int ii = 0; ii < s1Arpas.Length; ii++)
                 {
                     Match mtch = rgxIDRangeAz.Match(s1Arpas[ii]);
-                    string[] split = mtch.Value.Split(new char[] { '#' },StringSplitOptions.RemoveEmptyEntries);
+                    string[] split = mtch.Value.Split(new char[] { '#' }, StringSplitOptions.RemoveEmptyEntries);
                     int ID = int.Parse(split[0]);
                     double Range = double.Parse(split[1]);
                     double Az = double.Parse(split[2]);
@@ -158,7 +165,7 @@ namespace ArpaFromCamera
                     lock (lockObject)
                     {
                         arpaMsgs[ii] = new ArpaMsgDTO();
-                        arpaMsgs[ii].TargetName = "OpticColAv_"+ID;
+                        arpaMsgs[ii].TargetName = "OpticColAv_" + ID;
                         arpaMsgs[ii].TargetTime = DateTime.UtcNow;
                         arpaMsgs[ii].TargetDistance = Range;
                         arpaMsgs[ii].TargetBearing = Az;
@@ -174,12 +181,10 @@ namespace ArpaFromCamera
         }
         public static string[] GetArpa(double Heading)
         {
-
-
             string[] result;
-            if (Interlocked.CompareExchange(ref IsDataAvail, 0, 1) == 1)
+            lock (lockObject)
             {
-                lock (lockObject)
+                if (CheckIfArpaIsCurrent())
                 {
                     result = new string[arpaMsgs.Length];
                     for (int ii = 0; ii < arpaMsgs.Length; ii++)
@@ -189,14 +194,34 @@ namespace ArpaFromCamera
                         result[ii] = arpaMsgs[ii].ToString();
                     }
                 }
+                else
+                {
+                    result = new string[0];
+                }
+            }
+
+            return result;
+        }
+
+
+
+        private static bool CheckIfArpaIsCurrent()
+        {
+            bool bRes = false;
+            if (arpaMsgs != null && arpaMsgs.Length > 0)
+            {
+                
+                if (arpaMsgs[0].TargetTime - DateTime.UtcNow > TimeSpan.FromSeconds(ValidArpaExpiration))
+                {
+                    Interlocked.CompareExchange(ref IsDataAvail, 0, 1);
+                }
             }
             else
             {
-                result = new string[0];
+                bRes = true;
             }
-
-
-            return result;
+            
+            return bRes;
         }
 
         public static void Dispose()
