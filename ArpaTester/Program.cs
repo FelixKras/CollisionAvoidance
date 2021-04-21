@@ -18,7 +18,7 @@ namespace ArpaTester
                 int ii = 1000;
                 while (ii-->0)
                 {
-                    are.WaitOne(1000);
+                    are.WaitOne(500);
                     var test=ArpaFromCamera.ArpaClass.GetArpa( 10);
                 }
                 

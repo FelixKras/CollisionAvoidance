@@ -7,3 +7,8 @@ C:\Users\Felix\source\repos\FelixKras\CollisionAvoidance\Binaries\ArpaFromCamera
 C:\Users\Felix\source\repos\FelixKras\CollisionAvoidance\Binaries\ArpaFromCamera.pdb
 C:\Users\Felix\source\repos\FelixKras\CollisionAvoidance\Binaries\ArpaFromCamera\ArpaFromCamera.dll
 C:\Users\Felix\source\repos\FelixKras\CollisionAvoidance\Binaries\ArpaFromCamera\ArpaFromCamera.pdb
+C:\Users\Felix\Source\Repos\CollisionAvoidance\Binaries\ArpaFromCamera\ArpaFromCamera.dll
+C:\Users\Felix\Source\Repos\CollisionAvoidance\Binaries\ArpaFromCamera\ArpaFromCamera.pdb
+C:\Users\Felix\Source\Repos\CollisionAvoidance\ArpaFromCamera\obj\x64\Debug\ArpaFromCamera.csproj.CoreCompileInputs.cache
+C:\Users\Felix\Source\Repos\CollisionAvoidance\ArpaFromCamera\obj\x64\Debug\ArpaFromCamera.dll
+C:\Users\Felix\Source\Repos\CollisionAvoidance\ArpaFromCamera\obj\x64\Debug\ArpaFromCamera.pdb
