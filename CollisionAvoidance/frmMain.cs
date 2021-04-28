@@ -82,7 +82,13 @@ namespace CollisionAvoidance
             AlertEvent += OnReceivedMessage;
             bHasPythonStarted = false;
             SettingsHolder.PythonProcessId = -1;
+            SettingsHolder.LoadFromJson();
             string[] args = Environment.GetCommandLineArgs();
+            if (args.Length >1 && args[1].ToLowerInvariant().Contains("auto"))
+            {
+                StartDetection();
+                button1.Enabled = false;
+            }
         }
 
         private void imageGrabbedEvent(object sender, EventArgs e)
@@ -322,6 +328,11 @@ namespace CollisionAvoidance
         }
 
         private void button1_Click(object sender, EventArgs e)
+        {
+            StartDetection();
+        }
+
+        private void StartDetection()
         {
             //todo: extract to method, call it at the end of form constructor if a cseccondf cli argument is -auto (or something similar)
             if (thrPipe == null)

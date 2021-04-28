@@ -15,7 +15,9 @@ namespace CollisionAvoidance
         public SettingsForm()
         {
             InitializeComponent();
+            SettingsHolder.LoadFromJson();
             propertyGrid1.SelectedObject = SettingsHolder.Instance;
+            
         }
 
         private void fSettings_FormClosing(object sender, FormClosingEventArgs e)
@@ -36,16 +38,10 @@ namespace CollisionAvoidance
 
         private void loadToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            string jsonstring = string.Empty;
-            using (FileStream fs = new FileStream("settings.json", FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite))
-            using (StreamReader sw = new StreamReader(fs))
-            {
-                jsonstring = sw.ReadToEnd();
-            }
-
-            var tmp = JsonConvert.DeserializeObject<SettingsHolder>(jsonstring);
-            SettingsHolder.Update(tmp);
+            SettingsHolder.LoadFromJson();
             propertyGrid1.SelectedObject = SettingsHolder.Instance;
         }
+
+       
     }
 }

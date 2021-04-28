@@ -1,9 +1,11 @@
 ﻿
+using Newtonsoft.Json;
 using Ookii.Dialogs.WinForms;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing.Design;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -13,7 +15,7 @@ namespace CollisionAvoidance
     static class Program
     {
 
-        public const string versionNumber = "1.0.1.6";
+        public const string versionNumber = "1.0.1.7";
         public const string version = "Collision avoidance app: " + versionNumber;
         /// <summary>
         /// The main entry point for the application.
@@ -49,7 +51,7 @@ namespace CollisionAvoidance
                             instance.IPAddress = "127.0.0.1";
                             instance.IPPort = 36666;
                             instance.VidStream = "rtsp://192.168.10.14/bs1";
-                            instance.VDistance = 500;
+                            instance.VDistance = 0.03;
                             instance.ScoreThresh = 0.5;
                             instance.CamFOV = 20;
                             instance.DZoneVert = 60;
@@ -65,6 +67,29 @@ namespace CollisionAvoidance
 
         }
 
+
+        public static void LoadFromJson()
+        {
+            try
+            {
+
+                string jsonstring = string.Empty;
+                using (FileStream fs = new FileStream("settings.json", FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite))
+                using (StreamReader sw = new StreamReader(fs))
+                {
+                    jsonstring = sw.ReadToEnd();
+                }
+
+                var tmp = JsonConvert.DeserializeObject<SettingsHolder>(jsonstring);
+                SettingsHolder.Update(tmp);
+               
+            }
+            catch (Exception)
+            {
+
+
+            }
+        }
 
         public static void Update(SettingsHolder inst)
         {
@@ -98,7 +123,7 @@ namespace CollisionAvoidance
         [Category("2. Collision Avoidance")]
         [DisplayName("Virtual Distance")]
         [ReadOnly(false)]
-        [Description("Virtual Distance of obstacle [m]")]
+        [Description("Virtual Distance of obstacle [nm]")]
         public double VDistance { get; set; }
 
         [Category("3. Detection module")]
