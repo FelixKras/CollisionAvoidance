@@ -208,10 +208,9 @@ namespace ArpaFromCamera
         private static bool CheckIfArpaIsCurrent()
         {
             bool bRes = false;
-            if (arpaMsgs?[0] != null )
+            if (arpaMsgs?[0] != null)
             {
-                
-                if ( DateTime.UtcNow - arpaMsgs[0].TargetTime > TimeSpan.FromSeconds(ValidArpaExpiration))
+                if (DateTime.UtcNow - arpaMsgs[0].TargetTime > TimeSpan.FromSeconds(ValidArpaExpiration))
                 {
                     Interlocked.CompareExchange(ref IsDataAvail, 0, 1);
                 }
@@ -220,7 +219,6 @@ namespace ArpaFromCamera
                     bRes = true;
                 }
             }
-         
             return bRes;
         }
 
