@@ -4,9 +4,11 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing.Design;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Newtonsoft.Json;
 
 namespace CollisionAvoidance
 {
@@ -68,6 +70,28 @@ namespace CollisionAvoidance
 
         }
 
+        public static void LoadFromJson()
+        {
+            try
+            {
+
+                string jsonstring = string.Empty;
+                using (FileStream fs = new FileStream("settings.json", FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite))
+                using (StreamReader sw = new StreamReader(fs))
+                {
+                    jsonstring = sw.ReadToEnd();
+                }
+
+                var tmp = JsonConvert.DeserializeObject<SettingsHolder>(jsonstring);
+                SettingsHolder.Update(tmp);
+
+            }
+            catch (Exception)
+            {
+
+
+            }
+        }
 
         public static void Update(SettingsHolder inst)
         {
