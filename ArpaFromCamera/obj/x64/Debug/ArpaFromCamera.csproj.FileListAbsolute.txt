@@ -12,3 +12,4 @@ C:\Users\Felix\Source\Repos\CollisionAvoidance\Binaries\ArpaFromCamera\ArpaFromC
 C:\Users\Felix\Source\Repos\CollisionAvoidance\ArpaFromCamera\obj\x64\Debug\ArpaFromCamera.csproj.CoreCompileInputs.cache
 C:\Users\Felix\Source\Repos\CollisionAvoidance\ArpaFromCamera\obj\x64\Debug\ArpaFromCamera.dll
 C:\Users\Felix\Source\Repos\CollisionAvoidance\ArpaFromCamera\obj\x64\Debug\ArpaFromCamera.pdb
+C:\Users\Felix\source\repos\CollisionAvoidance\ArpaFromCamera\obj\x64\Debug\ArpaFromCamera.csprojAssemblyReference.cache

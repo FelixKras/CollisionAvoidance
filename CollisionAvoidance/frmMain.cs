@@ -95,6 +95,11 @@ namespace CollisionAvoidance
             bHasPythonStarted = false;
             SettingsHolder.PythonProcessId = -1;
             string[] args = Environment.GetCommandLineArgs();
+            if (args.Length > 1 && args[1].ToLowerInvariant().Contains("auto"))
+            {
+                StartDetection();
+                button1.Enabled = false;
+            }
         }
 
 
@@ -165,6 +170,19 @@ namespace CollisionAvoidance
             }
         }
 
+        private void StartDetection()
+        {
+            if (SettingsHolder.Instance.UsePythonTF)
+            {
+                StartPipeServer();
+            }
+            else
+            {
+                StartTFServer();
+            }
+
+            button1.Text = "Started!";
+        }
 
         void run_server()
         {
@@ -174,8 +192,8 @@ namespace CollisionAvoidance
                 Thread thrPyhtonProcess = new Thread(() => { CLI.RunProcess(ref bHasPythonStarted); });
                 thrPyhtonProcess.IsBackground = true;
                 thrPyhtonProcess.Start();
-                
-                
+
+
             }
             BinaryReader br = InitPipe();
 
@@ -284,7 +302,7 @@ namespace CollisionAvoidance
                     };
                     */
 
-            
+
 
 
                     List<Detection> lstDetect = new List<Detection>();
@@ -424,21 +442,7 @@ namespace CollisionAvoidance
 
         private void button1_Click(object sender, EventArgs e)
         {
-
-            if (SettingsHolder.Instance.UsePythonTF)
-            {
-                StartPipeServer();
-            }
-            else
-            {
-                StartTFServer();
-            }
-
-
-
-            button1.Text = "Started!";
-
-
+            StartDetection();
         }
 
         private void StartPipeServer()
@@ -521,7 +525,7 @@ namespace CollisionAvoidance
             // 0x0001   = 0000 0000 0001
             affinityMask &= 0x0001; // use only any of the first 4 available processors
             process.Threads[thrServer.ManagedThreadId].ProcessorAffinity = (IntPtr)(affinityMask);
-            process.ProcessorAffinity = (IntPtr) (affinityMask);
+            process.ProcessorAffinity = (IntPtr)(affinityMask);
             process.PriorityClass = ProcessPriorityClass.BelowNormal;
         }
 
