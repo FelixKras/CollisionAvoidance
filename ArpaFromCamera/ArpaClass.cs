@@ -53,8 +53,8 @@ namespace ArpaFromCamera
         internal string TargetName;
         internal char TargetStatus;
         internal char TargetReference;
-        internal double TargetUTC;
-        internal char TargetAcqType;
+        
+        
         internal DateTime TargetTime;
 
         public override string ToString()
@@ -99,7 +99,7 @@ namespace ArpaFromCamera
         private static int ValidArpaExpiration;
         private static int MaxNumTargets;
         private static int ArpaReceivePort;
-        public const string versionNumber = "1.0.0.5";
+        public const string versionNumber = "1.0.0.6";
         public const string version = "Arpa receiving library: " + versionNumber;
 
         static ArpaClass()

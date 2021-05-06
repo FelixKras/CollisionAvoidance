@@ -104,7 +104,7 @@ namespace CollisionAvoidance
 
 
 
-        private void imageGrabbedEvent(object sender, EventArgs e)
+        private void imageGrabbedEvent(object sender, EventArgs eargs)
         {
 
             try
@@ -121,7 +121,7 @@ namespace CollisionAvoidance
                     }
                 }
             }
-            catch (Exception Ex)
+            catch (Exception e)
             {
 
             }
