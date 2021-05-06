@@ -131,7 +131,7 @@ namespace CollisionAvoidance
         [Category("2. Collision Avoidance")]
         [DisplayName("Virtual Distance")]
         [ReadOnly(false)]
-        [Description("Virtual Distance of obstacle [m]")]
+        [Description("Virtual Distance of obstacle [nm]")]
         public double VDistance { get; set; }
 
         [Category("3. Detection module")]
@@ -190,11 +190,13 @@ namespace CollisionAvoidance
         [EditorAttribute(typeof(myFileBrowser), typeof(System.Drawing.Design.UITypeEditor))]
         [Description("Label file path (.pbtxt)")]
         public string LabellFile { get; set; }
-
-
-
-
-
+       
+        [Category("5. TensorFlow Options")]
+        [DisplayName("Is single core execution")]
+        [ReadOnly(false)]
+        [Description("Should TF be limited to a single core")]
+        public bool SingleCoreProcessing { get; set; }
+        
 
         public void Dispose()
         {

@@ -31,7 +31,7 @@ namespace CollisionAvoidance
         private Thread thrPipeConnection;
         private NamedPipeServerStream server;
         private bool bHasPythonStarted;
-        private ConcurrentQueue<Image<Bgr, byte>> grabbedImages;
+        private ConcurrentStack<Image<Bgr, byte>> grabbedImages;
         private delegate void CollEventDelegate(CollisionEventArgs _args);
         private event CollEventDelegate CollisionWarningEvent;
         private EventHandler AlertEvent;
@@ -93,6 +93,8 @@ namespace CollisionAvoidance
             CollisionWarningEvent += CollisionHandler;
             AlertEvent += OnReceivedMessage;
             bHasPythonStarted = false;
+
+            SettingsHolder.LoadFromJson();
             SettingsHolder.PythonProcessId = -1;
             string[] args = Environment.GetCommandLineArgs();
             if (args.Length > 1 && args[1].ToLowerInvariant().Contains("auto"))
@@ -110,16 +112,13 @@ namespace CollisionAvoidance
             try
             {
                 cap.Retrieve(inputFrame);
-                Image<Bgr, byte> LatestAcquiredImage = inputFrame.ToImage<Bgr, byte>();
-
-                grabbedImages.Enqueue(LatestAcquiredImage);
-                if (grabbedImages?.Count > 5)
+                Image<Bgr, byte> latestAcquiredImage = inputFrame.ToImage<Bgr, byte>();
+                if (grabbedImages?.Count > 1)
                 {
-                    while (grabbedImages?.Count > 1)
-                    {
-                        grabbedImages.TryDequeue(out _);
-                    }
+                    grabbedImages.Clear();
                 }
+                grabbedImages?.Push(latestAcquiredImage);
+
             }
             catch (Exception e)
             {
@@ -285,7 +284,7 @@ namespace CollisionAvoidance
             while (!cancelEvent.IsCancellationRequested)
             {
 
-                if (grabbedImages != null && grabbedImages.TryDequeue(out grabbedImage) && grabbedImage.Width * grabbedImage.Height > 0)
+                if (grabbedImages != null && grabbedImages.TryPop(out grabbedImage) && grabbedImage.Width * grabbedImage.Height > 0)
                 {
                     TFDetect.Results resultsFromTF = null;
                     var sw = Stopwatch.StartNew();
@@ -473,8 +472,7 @@ namespace CollisionAvoidance
         }
         private void StartTFServer()
         {
-            Process process = Process.GetCurrentProcess();
-
+            bool bRes = false;
             int CamNum = -1;
             if (int.TryParse(SettingsHolder.Instance.VidStream, out CamNum))
             {
@@ -489,37 +487,57 @@ namespace CollisionAvoidance
             {
                 if (grabbedImages == null)
                 {
-                    grabbedImages = new ConcurrentQueue<Image<Bgr, byte>>();
+                    grabbedImages = new ConcurrentStack<Image<Bgr, byte>>();
                 }
                 cap.ImageGrabbed += imageGrabbedEvent;
                 cap.Start();
-            }
-            if (thrServer == null)
-            {
-                thrServer = new Thread(run_TFdetector);
-                thrServer.IsBackground = true;
-                thrServer.Priority = ThreadPriority.BelowNormal;
-                thrServer.Start();
+                bRes = true;
             }
             else
             {
-                cancelEvent.Cancel();
-                cap.Stop();
-                while ((thrServer.ThreadState & (System.Threading.ThreadState.Stopped | System.Threading.ThreadState.Unstarted |
-                                               System.Threading.ThreadState.WaitSleepJoin |
-                                               System.Threading.ThreadState.AbortRequested)) == 0)
-                {
-                    thrServer.Abort();
-                    Thread.Sleep(1);
-                }
-
-                cancelEvent = new CancellationTokenSource();
-                thrServer = new Thread(run_TFdetector);
-                thrServer.IsBackground = true;
-                thrServer.Priority = ThreadPriority.BelowNormal;
-                thrServer.Start();
+                bRes = false;
             }
 
+            if (bRes)
+            {
+                if (thrServer == null)
+                {
+                    thrServer = new Thread(run_TFdetector);
+                    thrServer.IsBackground = true;
+                    thrServer.Priority = ThreadPriority.BelowNormal;
+                    thrServer.Start();
+                }
+                else
+                {
+                    cancelEvent.Cancel();
+                    cap.Stop();
+                    while ((thrServer.ThreadState & (System.Threading.ThreadState.Stopped | System.Threading.ThreadState.Unstarted |
+                                                     System.Threading.ThreadState.WaitSleepJoin |
+                                                     System.Threading.ThreadState.AbortRequested)) == 0)
+                    {
+                        thrServer.Abort();
+                        Thread.Sleep(1);
+                    }
+
+                    cancelEvent = new CancellationTokenSource();
+                    thrServer = new Thread(run_TFdetector) 
+                        {IsBackground = true, Priority = ThreadPriority.BelowNormal};
+                    thrServer.Start();
+                }
+
+                if (SettingsHolder.Instance.SingleCoreProcessing)
+                {
+                    SetCPUCoreAffinity();
+                }
+
+            }
+
+
+        }
+
+        private void SetCPUCoreAffinity()
+        {
+            Process process = Process.GetCurrentProcess();
             long affinityMask = (long)process.ProcessorAffinity;
             // 0xfff    = 1111 1111 1111
             // 0x0001   = 0000 0000 0001
