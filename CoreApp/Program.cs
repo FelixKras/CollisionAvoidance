@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing.Design;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Newtonsoft.Json;
@@ -15,7 +14,7 @@ namespace Collision_Avoidance_Core
     static class Program
     {
 
-        public const string versionNumber = "1.0.1.8";
+        public const string versionNumber = "1.0.1.9";
         public const string version = "Collision avoidance app: " + versionNumber;
         /// <summary>
         /// The main entry point for the application.
@@ -218,7 +217,7 @@ namespace Collision_Avoidance_Core
             {
                 VistaFileDialog ofd = new VistaOpenFileDialog();
                 string[] s1Descript = context.PropertyDescriptor.Description.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                ofd.Filter = @"|*.csv";
+                ofd.Filter = @"|*.*";
                 if ((bool) ofd.ShowDialog())
                 {
                     return ofd.FileName;

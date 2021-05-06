@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\Felix\\source\\repos\\CollisionAvoidanceDotCore\\CollisionAvoidance\\Collision Avoidance.csproj": {}
+    "C:\\Users\\Felix\\source\\repos\\CollisionAvoidance\\CollisionAvoidance\\Collision Avoidance.csproj": {}
   },
   "projects": {
-    "C:\\Users\\Felix\\source\\repos\\CollisionAvoidanceDotCore\\CollisionAvoidance\\Collision Avoidance.csproj": {
+    "C:\\Users\\Felix\\source\\repos\\CollisionAvoidance\\CollisionAvoidance\\Collision Avoidance.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Felix\\source\\repos\\CollisionAvoidanceDotCore\\CollisionAvoidance\\Collision Avoidance.csproj",
+        "projectUniqueName": "C:\\Users\\Felix\\source\\repos\\CollisionAvoidance\\CollisionAvoidance\\Collision Avoidance.csproj",
         "projectName": "Collision Avoidance",
-        "projectPath": "C:\\Users\\Felix\\source\\repos\\CollisionAvoidanceDotCore\\CollisionAvoidance\\Collision Avoidance.csproj",
+        "projectPath": "C:\\Users\\Felix\\source\\repos\\CollisionAvoidance\\CollisionAvoidance\\Collision Avoidance.csproj",
         "packagesPath": "C:\\Users\\Felix\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Felix\\source\\repos\\CollisionAvoidanceDotCore\\CollisionAvoidance\\obj\\",
+        "outputPath": "C:\\Users\\Felix\\source\\repos\\CollisionAvoidance\\CollisionAvoidance\\obj\\",
         "projectStyle": "PackageReference",
         "skipContentFileWrite": true,
         "fallbackFolders": [
@@ -32,8 +32,8 @@
         "frameworks": {
           "net461": {
             "projectReferences": {
-              "C:\\Users\\Felix\\source\\repos\\CollisionAvoidanceDotCore\\TFDetect\\TFDetect.csproj": {
-                "projectPath": "C:\\Users\\Felix\\source\\repos\\CollisionAvoidanceDotCore\\TFDetect\\TFDetect.csproj"
+              "C:\\Users\\Felix\\source\\repos\\CollisionAvoidance\\TFDetect\\TFDetect.csproj": {
+                "projectPath": "C:\\Users\\Felix\\source\\repos\\CollisionAvoidance\\TFDetect\\TFDetect.csproj"
               }
             }
           }
@@ -81,14 +81,14 @@
         }
       }
     },
-    "C:\\Users\\Felix\\source\\repos\\CollisionAvoidanceDotCore\\TFDetect\\TFDetect.csproj": {
+    "C:\\Users\\Felix\\source\\repos\\CollisionAvoidance\\TFDetect\\TFDetect.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Felix\\source\\repos\\CollisionAvoidanceDotCore\\TFDetect\\TFDetect.csproj",
+        "projectUniqueName": "C:\\Users\\Felix\\source\\repos\\CollisionAvoidance\\TFDetect\\TFDetect.csproj",
         "projectName": "TFDetect",
-        "projectPath": "C:\\Users\\Felix\\source\\repos\\CollisionAvoidanceDotCore\\TFDetect\\TFDetect.csproj",
+        "projectPath": "C:\\Users\\Felix\\source\\repos\\CollisionAvoidance\\TFDetect\\TFDetect.csproj",
         "packagesPath": "C:\\Users\\Felix\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Felix\\source\\repos\\CollisionAvoidanceDotCore\\TFDetect\\obj\\",
+        "outputPath": "C:\\Users\\Felix\\source\\repos\\CollisionAvoidance\\TFDetect\\obj\\",
         "projectStyle": "PackageReference",
         "skipContentFileWrite": true,
         "fallbackFolders": [
