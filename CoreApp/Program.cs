@@ -15,7 +15,7 @@ namespace Collision_Avoidance_Core
     {
 
         public const string versionNumber = "1.0.1.9";
-        public const string version = "Collision avoidance app: " + versionNumber;
+        public const string version = "Collision avoidance app (core): " + versionNumber;
         /// <summary>
         /// The main entry point for the application.
         /// </summary>

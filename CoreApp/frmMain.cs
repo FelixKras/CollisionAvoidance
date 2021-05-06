@@ -578,10 +578,7 @@ namespace Collision_Avoidance_Core
                 {
                     SetCPUCoreAffinity();
                 }
-
             }
-
-
         }
 
         private void SetCPUCoreAffinity()
@@ -668,7 +665,7 @@ namespace Collision_Avoidance_Core
 
         public static byte[] GetBytes(this string str)
         {
-            return ASCIIEncoding.ASCII.GetBytes(str);
+            return Encoding.ASCII.GetBytes(str);
         }
         public static void Raise(this EventHandler handler, object sender, EventArgs args = null)
         {
