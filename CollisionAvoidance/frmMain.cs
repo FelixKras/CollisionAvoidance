@@ -32,10 +32,10 @@ namespace CollisionAvoidance
         private NamedPipeServerStream server;
         private bool bHasPythonStarted;
         private ConcurrentStack<Image<Bgr, byte>> grabbedImages;
-        private delegate void CollEventDelegate(CollisionEventArgs _args);
-        private event CollEventDelegate CollisionWarningEvent;
-        private EventHandler AlertEvent;
-
+        private TimeSpan perfTime;
+        private EventHandler TargetsReceived;
+        private EventHandler CollisionWarning;
+        private readonly object _lockobj;
         internal class Detection
         {
             internal float Score;
@@ -71,9 +71,25 @@ namespace CollisionAvoidance
             }
         }
 
+        internal class TargetsReceivedEventArgs : EventArgs
+        {
+            internal Detection[] colDetect;
+            internal TimeSpan TimeFromLastDetect;
+            public TargetsReceivedEventArgs()
+            {
+
+            }
+            public TargetsReceivedEventArgs(Detection[] det, TimeSpan lastDetect)
+            {
+                this.colDetect = det;
+                this.TimeFromLastDetect = lastDetect;
+            }
+        }
+
         internal class CollisionEventArgs : EventArgs
         {
             internal Detection[] colDetect;
+            internal TimeSpan TimeFromLastDetect;
             public CollisionEventArgs()
             {
 
@@ -84,14 +100,17 @@ namespace CollisionAvoidance
             }
         }
 
+
+
         public frmMain()
         {
 
             InitializeComponent();
             this.Text = Program.version;
             cancelEvent = new CancellationTokenSource();
-            CollisionWarningEvent += CollisionHandler;
-            AlertEvent += OnReceivedMessage;
+            _lockobj = new object();
+            CollisionWarning += onCollisionHandler;
+            TargetsReceived += onTargetsReceived;
             bHasPythonStarted = false;
 
             SettingsHolder.LoadFromJson();
@@ -104,7 +123,31 @@ namespace CollisionAvoidance
             }
         }
 
+        private void onCollisionHandler(object sender, EventArgs e)
+        {
+            if (e is CollisionEventArgs ecol)
+            {
+                for (int ii = 0; ii < ecol.colDetect.Length; ii++)
+                {
+                    OnReceivedMessage(string.Format("Collision detected. AZ: {0:F3}", ecol.colDetect[ii].Azimuth), EventArgs.Empty);
+                }
+                SendUdpMessage(ecol.colDetect);
+            }
+        }
 
+        private void onTargetsReceived(object sender, EventArgs e)
+        {
+            if (e is TargetsReceivedEventArgs etar)
+            {
+                string sMsg = string.Format("Received {0:D} targets above thresh ({1:F1})",
+                    etar.colDetect.Length, SettingsHolder.Instance.ScoreThresh);
+                lock (_lockobj)
+                {
+                    perfTime = etar.TimeFromLastDetect;
+                }
+                OnReceivedMessage(sMsg, EventArgs.Empty);
+            }
+        }
 
         private void imageGrabbedEvent(object sender, EventArgs eargs)
         {
@@ -125,14 +168,6 @@ namespace CollisionAvoidance
 
             }
         }
-        private void CollisionHandler(CollisionEventArgs e)
-        {
-            for (int ii = 0; ii < e.colDetect.Length; ii++)
-            {
-                AlertEvent.Raise(string.Format("Collision detected. AZ: {0:F3}", e.colDetect[ii].Azimuth));
-            }
-            SendUdpMessage(e.colDetect);
-        }
 
         private void SendUdpMessage(Detection[] colDetect)
         {
@@ -146,7 +181,7 @@ namespace CollisionAvoidance
             }
 
             udpc.Send(msg.GetBytes(), msg.Length, remoteIPE);
-            AlertEvent.Raise("Warning Sent");
+            TargetsReceived.Raise("Warning Sent");
         }
 
         private void OnReceivedMessage(object sender, EventArgs e)
@@ -162,6 +197,11 @@ namespace CollisionAvoidance
                         if (listBox1.Items.Count > 150)
                         {
                             listBox1.Items.TrimTo(100);
+                        }
+
+                        lock (_lockobj)
+                        {
+                            textBox1.Text = (perfTime.TotalMilliseconds/1000D).ToString("F3");
                         }
 
                     });
@@ -236,18 +276,21 @@ namespace CollisionAvoidance
 
                     List<Detection> lstDetect = new List<Detection>();
                     FillList(lstDetect, Scores, Classes, ymin, xmin, ymax, xmax, img.Size);
-                    AlertEvent.Raise(string.Format("Received {0:D} targets above thresh ({1:F1})", lstDetect.Count, SettingsHolder.Instance.ScoreThresh));
+
                     if (SettingsHolder.Instance.ShowBoxes)
                     {
                         DrawDetectionBoxes(ref img, lstDetect);
                     }
 
+                    TargetsReceived.Raise(null, new TargetsReceivedEventArgs(lstDetect.ToArray(), TimeSpan.FromMilliseconds(99999)));
+                    List<Detection> dangerTargets = CheckIfInDangerZone(ref img, lstDetect);
+                    if (dangerTargets.Count > 0)
+                    {
+                        CollisionWarning.Raise(null, new CollisionEventArgs(dangerTargets.ToArray()));
+                    }
 
-                    CheckIfInDangerZone(ref img, lstDetect);
 
                     pictureBox1.Image = img.ToBitmap();
-
-
                 }
             }
             catch (EndOfStreamException)
@@ -308,8 +351,15 @@ namespace CollisionAvoidance
                     FillList(lstDetect, resultsFromTF.Scores, resultsFromTF.ClassesID,
                         resultsFromTF.top, resultsFromTF.left, resultsFromTF.right,
                         resultsFromTF.bottom, grabbedImage.Size, resultsFromTF.ClassesName);
-                    AlertEvent.Raise(string.Format("Received {0:D} targets above thresh ({1:F1})", lstDetect.Count, SettingsHolder.Instance.ScoreThresh));
-                    CheckIfInDangerZone(ref grabbedImage, lstDetect);
+
+
+                    TargetsReceived.Raise(null, new TargetsReceivedEventArgs(lstDetect.ToArray(), TimeSpan.FromMilliseconds(sw.ElapsedMilliseconds)));
+
+                    List<Detection> dangerTargets = CheckIfInDangerZone(ref grabbedImage, lstDetect);
+                    if (dangerTargets.Count > 0)
+                    {
+                        CollisionWarning.Raise(null, new CollisionEventArgs(dangerTargets.ToArray()));
+                    }
                     if (SettingsHolder.Instance.ShowBoxes)
                     {
                         DrawDetectionBoxes(ref grabbedImage, lstDetect);
@@ -332,7 +382,7 @@ namespace CollisionAvoidance
             if (server == null)
             {
                 server = new NamedPipeServerStream("DetectionData", PipeDirection.InOut, 2);
-                AlertEvent.Raise(string.Format("Started module connection"));
+                TargetsReceived.Raise(string.Format("Started module connection"));
             }
             else
             {
@@ -352,8 +402,9 @@ namespace CollisionAvoidance
             return br;
         }
 
-        private void CheckIfInDangerZone(ref Image<Bgr, byte> img, List<Detection> lstDetect)
+        private List<Detection> CheckIfInDangerZone(ref Image<Bgr, byte> img, List<Detection> lstDetect)
         {
+            bool bRes = false;
             Rectangle DZrect = Rectangle.Empty;
             double Left = img.Size.Width / 2 - (SettingsHolder.Instance.DZoneHor / 100 * img.Size.Width);
             double Right = img.Size.Width / 2 + (SettingsHolder.Instance.DZoneHor / 100 * img.Size.Width);
@@ -370,14 +421,15 @@ namespace CollisionAvoidance
                 if (DZrect.Contains(lstDetect[i].GetCenter) && lstDangerTarg.Count < SettingsHolder.Instance.NumberOfDangerTargets)
                 {
                     lstDangerTarg.Add(lstDetect[i]);
+
                 }
             }
             if (lstDangerTarg.Count > 0)
             {
-                CollisionWarningEvent?.Invoke(new CollisionEventArgs(lstDangerTarg.ToArray()));
+                bRes = true;
             }
 
-
+            return lstDangerTarg;
         }
 
         private void DrawDetectionBoxes(ref Image<Bgr, byte> img, List<Detection> lstDetect)
@@ -459,8 +511,6 @@ namespace CollisionAvoidance
                                                System.Threading.ThreadState.WaitSleepJoin |
                                                System.Threading.ThreadState.AbortRequested)) == 0)
                 {
-                    thrServer.Abort();
-                    thrPipeConnection.Abort();
                     Thread.Sleep(1);
                 }
 
@@ -515,13 +565,12 @@ namespace CollisionAvoidance
                                                      System.Threading.ThreadState.WaitSleepJoin |
                                                      System.Threading.ThreadState.AbortRequested)) == 0)
                     {
-                        thrServer.Abort();
                         Thread.Sleep(1);
                     }
 
                     cancelEvent = new CancellationTokenSource();
-                    thrServer = new Thread(run_TFdetector) 
-                        {IsBackground = true, Priority = ThreadPriority.BelowNormal};
+                    thrServer = new Thread(run_TFdetector)
+                    { IsBackground = true, Priority = ThreadPriority.BelowNormal };
                     thrServer.Start();
                 }
 

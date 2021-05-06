@@ -1,0 +1,146 @@
+{
+  "format": 1,
+  "restore": {
+    "C:\\Users\\Felix\\source\\repos\\CollisionAvoidanceDotCore\\CollisionAvoidance\\Collision Avoidance.csproj": {}
+  },
+  "projects": {
+    "C:\\Users\\Felix\\source\\repos\\CollisionAvoidanceDotCore\\CollisionAvoidance\\Collision Avoidance.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "C:\\Users\\Felix\\source\\repos\\CollisionAvoidanceDotCore\\CollisionAvoidance\\Collision Avoidance.csproj",
+        "projectName": "Collision Avoidance",
+        "projectPath": "C:\\Users\\Felix\\source\\repos\\CollisionAvoidanceDotCore\\CollisionAvoidance\\Collision Avoidance.csproj",
+        "packagesPath": "C:\\Users\\Felix\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\Felix\\source\\repos\\CollisionAvoidanceDotCore\\CollisionAvoidance\\obj\\",
+        "projectStyle": "PackageReference",
+        "skipContentFileWrite": true,
+        "fallbackFolders": [
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+        ],
+        "configFilePaths": [
+          "C:\\Users\\Felix\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        ],
+        "originalTargetFrameworks": [
+          "net461"
+        ],
+        "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net461": {
+            "projectReferences": {
+              "C:\\Users\\Felix\\source\\repos\\CollisionAvoidanceDotCore\\TFDetect\\TFDetect.csproj": {
+                "projectPath": "C:\\Users\\Felix\\source\\repos\\CollisionAvoidanceDotCore\\TFDetect\\TFDetect.csproj"
+              }
+            }
+          }
+        }
+      },
+      "frameworks": {
+        "net461": {
+          "dependencies": {
+            "Emgu.CV": {
+              "target": "Package",
+              "version": "[4.4.0.4061, )"
+            },
+            "Emgu.CV.Bitmap": {
+              "target": "Package",
+              "version": "[4.4.0.4061, )"
+            },
+            "Emgu.CV.runtime.windows": {
+              "target": "Package",
+              "version": "[4.4.0.4061, )"
+            },
+            "Newtonsoft.Json": {
+              "target": "Package",
+              "version": "[13.0.1, )"
+            },
+            "Ookii.Dialogs.WinForms": {
+              "target": "Package",
+              "version": "[1.2.0, )"
+            },
+            "System.Drawing.Common": {
+              "target": "Package",
+              "version": "[5.0.2, )"
+            }
+          }
+        }
+      },
+      "runtimes": {
+        "win": {
+          "#import": []
+        },
+        "win-x64": {
+          "#import": []
+        },
+        "win-x86": {
+          "#import": []
+        }
+      }
+    },
+    "C:\\Users\\Felix\\source\\repos\\CollisionAvoidanceDotCore\\TFDetect\\TFDetect.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "C:\\Users\\Felix\\source\\repos\\CollisionAvoidanceDotCore\\TFDetect\\TFDetect.csproj",
+        "projectName": "TFDetect",
+        "projectPath": "C:\\Users\\Felix\\source\\repos\\CollisionAvoidanceDotCore\\TFDetect\\TFDetect.csproj",
+        "packagesPath": "C:\\Users\\Felix\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\Felix\\source\\repos\\CollisionAvoidanceDotCore\\TFDetect\\obj\\",
+        "projectStyle": "PackageReference",
+        "skipContentFileWrite": true,
+        "fallbackFolders": [
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+        ],
+        "configFilePaths": [
+          "C:\\Users\\Felix\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        ],
+        "originalTargetFrameworks": [
+          "net461"
+        ],
+        "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net461": {
+            "projectReferences": {}
+          }
+        }
+      },
+      "frameworks": {
+        "net461": {
+          "dependencies": {
+            "Newtonsoft.Json": {
+              "target": "Package",
+              "version": "[13.0.1, )"
+            },
+            "NumSharp.Bitmap": {
+              "target": "Package",
+              "version": "[0.30.0, )"
+            },
+            "TensorFlow.Keras": {
+              "target": "Package",
+              "version": "[0.5.0, )"
+            }
+          }
+        }
+      },
+      "runtimes": {
+        "win": {
+          "#import": []
+        },
+        "win-x64": {
+          "#import": []
+        },
+        "win-x86": {
+          "#import": []
+        }
+      }
+    }
+  }
+}
